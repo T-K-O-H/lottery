@@ -17,13 +17,13 @@ export default function Home() {
         <div className="max-w-4xl mx-auto">
           {/* Compact Header with Disclaimer */}
           <div className="text-center mb-4 sm:mb-6">
-            <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent mb-1 sm:mb-2">
+            <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent mb-1 sm:mb-2">
               PB Lucky Draw AI
             </h1>
-            <p className="text-muted-foreground text-xs sm:text-sm max-w-lg mx-auto mb-2 sm:mb-3 text-balance px-2">
+            <p className="text-muted-foreground text-base max-w-lg mx-auto mb-2 sm:mb-3 text-balance px-2">
               Pattern-powered lottery number generation for entertainment only
             </p>
-            <p className="text-[10px] sm:text-xs text-muted-foreground/70 max-w-md mx-auto px-4">
+            <p className="text-sm text-muted-foreground/70 max-w-md mx-auto px-4">
               Lottery is random. Past patterns don't predict future results. Play responsibly.
             </p>
           </div>
@@ -35,7 +35,7 @@ export default function Home() {
           <div className="text-center mt-8 sm:mt-10">
             <button
               onClick={() => setShowStats(!showStats)}
-              className="text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors underline-offset-4 hover:underline"
+              className="text-base text-muted-foreground hover:text-foreground transition-colors underline-offset-4 hover:underline"
             >
               {showStats ? "Hide" : "Show"} Pattern Statistics
             </button>
@@ -50,7 +50,7 @@ export default function Home() {
 
           {/* Footer Navigation */}
           <footer className="mt-12 pt-6 border-t border-border/30">
-            <nav className="flex flex-wrap justify-center gap-4 sm:gap-6 text-xs sm:text-sm text-muted-foreground">
+            <nav className="flex flex-wrap justify-center gap-4 sm:gap-6 text-base text-muted-foreground">
               <Link href="/how-it-works" className="hover:text-foreground transition-colors">
                 How It Works
               </Link>
@@ -58,7 +58,7 @@ export default function Home() {
                 FAQ
               </Link>
             </nav>
-            <p className="text-center text-[10px] sm:text-xs text-muted-foreground/60 mt-4">
+            <p className="text-center text-sm text-muted-foreground/60 mt-4">
               For entertainment purposes only. Play responsibly.
             </p>
           </footer>
