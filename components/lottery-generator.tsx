@@ -41,8 +41,9 @@ export function LotteryGenerator() {
   const [savedSets, setSavedSets] = useState<GeneratedNumbers[]>([]);
   const [showFireworks, setShowFireworks] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [globalCount, setGlobalCount] = useState<number | null>(null);
 
-  // Load from localStorage on mount
+  // Load from localStorage on mount and fetch global counter
   useEffect(() => {
     const savedData = localStorage.getItem(STORAGE_KEY_SAVED);
     const lastGenerated = localStorage.getItem(STORAGE_KEY_LAST);
@@ -62,6 +63,12 @@ export function LotteryGenerator() {
         console.error("Failed to parse last generated", e);
       }
     }
+    
+    // Fetch global generation count
+    fetch("/api/counter")
+      .then((res) => res.json())
+      .then((data) => setGlobalCount(data.count))
+      .catch((err) => console.error("Failed to fetch counter", err));
     
     setIsHydrated(true);
   }, []);
@@ -85,11 +92,20 @@ export function LotteryGenerator() {
     setGeneratedNumbers(null);
     setShowFireworks(false);
 
-    setTimeout(() => {
+    setTimeout(async () => {
       const numbers = generateNumbersForStrategy(strategy);
       setGeneratedNumbers(numbers);
       setIsGenerating(false);
       setShowFireworks(true);
+      
+      // Increment global counter
+      try {
+        const res = await fetch("/api/counter", { method: "POST" });
+        const data = await res.json();
+        setGlobalCount(data.count);
+      } catch (err) {
+        console.error("Failed to increment counter", err);
+      }
       
       // Reset fireworks after animation
       setTimeout(() => setShowFireworks(false), 2000);
@@ -269,6 +285,15 @@ export function LotteryGenerator() {
   return (
     <div className="space-y-6">
       <Fireworks trigger={showFireworks} />
+      
+      {/* Global Counter */}
+      {globalCount !== null && (
+        <div className="text-center">
+          <span className="text-xs text-muted-foreground">
+            <span className="font-semibold text-foreground">{globalCount.toLocaleString()}</span> lucky numbers generated worldwide
+          </span>
+        </div>
+      )}
       
       {/* Strategy Selection - Compact pills */}
       <div className="flex flex-wrap justify-center gap-2">
