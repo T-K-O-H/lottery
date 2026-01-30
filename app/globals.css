@@ -109,4 +109,35 @@
   animation: firework-particle 1.2s ease-out forwards;
 }
 
+/* Generation effect animations */
+@keyframes effect-burst {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(calc(var(--speed-x) * 100px), calc(var(--speed-y) * 100px)) scale(0);
+    opacity: 0;
+  }
+}
+
+@keyframes effect-fall {
+  0% {
+    transform: translate(0, 0) rotate(var(--rotation));
+    opacity: 1;
+  }
+  100% {
+    transform: translate(calc(var(--speed-x) * 150px), calc(var(--speed-y) * 150px)) rotate(calc(var(--rotation) + 180deg));
+    opacity: 0;
+  }
+}
+
+.animate-effect-burst {
+  animation: effect-burst 1.5s ease-out forwards;
+}
+
+.animate-effect-fall {
+  animation: effect-fall 2s ease-out forwards;
+}
+
 

@@ -3,8 +3,17 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { NumberBall } from "@/components/number-ball";
-import { Fireworks } from "@/components/fireworks";
+import { GenerationEffects } from "@/components/generation-effects";
 import { Sparkles, Flame, Snowflake, Scale, TrendingUp, Shuffle, Save, RefreshCw, Trash2 } from "lucide-react";
+
+const strategyEffects: Record<string, "fireworks" | "lightning" | "snowflakes" | "dollars" | "shooting-star" | "none"> = {
+  hot: "fireworks",
+  ultimate: "lightning",
+  cold: "snowflakes",
+  balanced: "dollars",
+  frequency: "shooting-star",
+  random: "none",
+};
 
 const STORAGE_KEY_SAVED = "lottery-saved-sets";
 const STORAGE_KEY_LAST = "lottery-last-generated";
@@ -284,7 +293,7 @@ export function LotteryGenerator() {
 
   return (
     <div className="space-y-6">
-      <Fireworks trigger={showFireworks} />
+      <GenerationEffects trigger={showFireworks} type={strategyEffects[selectedStrategy]} />
       
       {/* Global Counter */}
       {globalCount !== null && (
