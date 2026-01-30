@@ -27,50 +27,50 @@ export function StatsPanel() {
   ];
 
   return (
-    <div className="space-y-6">
-      <Card className="p-6 bg-card/50 backdrop-blur-sm border-border">
-        <div className="flex items-center gap-2 mb-4">
-          <Flame className="w-5 h-5 text-red-500" />
-          <h3 className="text-lg font-bold">Hottest Numbers</h3>
+    <div className="space-y-3 sm:space-y-6">
+      <Card className="p-3 sm:p-6 bg-card/50 backdrop-blur-sm border-border">
+        <div className="flex items-center gap-1.5 sm:gap-2 mb-2 sm:mb-4">
+          <Flame className="w-4 h-4 sm:w-5 sm:h-5 text-red-500" />
+          <h3 className="text-sm sm:text-lg font-bold">Hottest Numbers</h3>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+        <div className="grid grid-cols-5 gap-1.5 sm:gap-3">
           {hotNumbers.map((item) => (
-            <div key={item.number} className="text-center p-3 rounded-lg bg-gradient-to-br from-red-500/20 to-orange-500/20 border border-red-500/30">
-              <div className="text-3xl font-bold text-red-500 mb-1">{item.number}</div>
-              <div className="text-xs text-muted-foreground">Heat: {item.heatIndex}</div>
-              <div className="text-xs text-muted-foreground">{item.appearances} times</div>
+            <div key={item.number} className="text-center p-1.5 sm:p-3 rounded-lg bg-gradient-to-br from-red-500/20 to-orange-500/20 border border-red-500/30">
+              <div className="text-xl sm:text-3xl font-bold text-red-500 mb-0.5 sm:mb-1">{item.number}</div>
+              <div className="text-[9px] sm:text-xs text-muted-foreground hidden sm:block">Heat: {item.heatIndex}</div>
+              <div className="text-[9px] sm:text-xs text-muted-foreground">{item.appearances}x</div>
             </div>
           ))}
         </div>
       </Card>
 
-      <Card className="p-6 bg-card/50 backdrop-blur-sm border-border">
-        <div className="flex items-center gap-2 mb-4">
-          <Snowflake className="w-5 h-5 text-blue-500" />
-          <h3 className="text-lg font-bold">Coldest Numbers</h3>
+      <Card className="p-3 sm:p-6 bg-card/50 backdrop-blur-sm border-border">
+        <div className="flex items-center gap-1.5 sm:gap-2 mb-2 sm:mb-4">
+          <Snowflake className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
+          <h3 className="text-sm sm:text-lg font-bold">Coldest Numbers</h3>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+        <div className="grid grid-cols-5 gap-1.5 sm:gap-3">
           {coldNumbers.map((item) => (
-            <div key={item.number} className="text-center p-3 rounded-lg bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-blue-500/30">
-              <div className="text-3xl font-bold text-blue-500 mb-1">{item.number}</div>
-              <div className="text-xs text-muted-foreground">Heat: {item.heatIndex}</div>
-              <div className="text-xs text-muted-foreground">{item.appearances} times</div>
+            <div key={item.number} className="text-center p-1.5 sm:p-3 rounded-lg bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-blue-500/30">
+              <div className="text-xl sm:text-3xl font-bold text-blue-500 mb-0.5 sm:mb-1">{item.number}</div>
+              <div className="text-[9px] sm:text-xs text-muted-foreground hidden sm:block">Heat: {item.heatIndex}</div>
+              <div className="text-[9px] sm:text-xs text-muted-foreground">{item.appearances}x</div>
             </div>
           ))}
         </div>
       </Card>
 
-      <Card className="p-6 bg-card/50 backdrop-blur-sm border-border">
-        <div className="flex items-center gap-2 mb-4">
-          <TrendingUp className="w-5 h-5 text-accent" />
-          <h3 className="text-lg font-bold">Key Insights</h3>
+      <Card className="p-3 sm:p-6 bg-card/50 backdrop-blur-sm border-border">
+        <div className="flex items-center gap-1.5 sm:gap-2 mb-2 sm:mb-4">
+          <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />
+          <h3 className="text-sm sm:text-lg font-bold">Key Insights</h3>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-3 gap-2 sm:gap-4">
           {insights.map((insight, idx) => (
-            <div key={idx} className="text-center p-4 rounded-lg bg-background/50">
-              <div className="text-sm text-muted-foreground mb-1">{insight.label}</div>
-              <div className="text-3xl font-bold text-accent mb-1">{insight.value}</div>
-              <div className="text-xs text-muted-foreground">{insight.description}</div>
+            <div key={idx} className="text-center p-2 sm:p-4 rounded-lg bg-background/50">
+              <div className="text-[9px] sm:text-sm text-muted-foreground mb-0.5 sm:mb-1 truncate">{insight.label}</div>
+              <div className="text-lg sm:text-3xl font-bold text-accent mb-0.5 sm:mb-1">{insight.value}</div>
+              <div className="text-[8px] sm:text-xs text-muted-foreground leading-tight">{insight.description}</div>
             </div>
           ))}
         </div>

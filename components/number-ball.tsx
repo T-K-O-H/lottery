@@ -53,12 +53,12 @@ export function NumberBall({ number, variant = "white", delay = 0 }: NumberBallP
       }`}
     >
       <div
-        className={`w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center text-2xl md:text-3xl font-bold font-mono shadow-2xl ${
+        className={`w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center text-lg sm:text-2xl md:text-3xl font-bold font-mono shadow-2xl ${
           isRolling ? "animate-spin" : "animate-float"
         } ${
           isPower
-            ? "bg-gradient-to-br from-red-600 via-red-500 to-red-700 text-white border-4 border-red-400"
-            : "bg-gradient-to-br from-white via-gray-100 to-white text-black border-4 border-gray-300"
+            ? "bg-gradient-to-br from-red-600 via-red-500 to-red-700 text-white border-2 sm:border-4 border-red-400"
+            : "bg-gradient-to-br from-white via-gray-100 to-white text-black border-2 sm:border-4 border-gray-300"
         }`}
         style={{
           boxShadow: isPower
