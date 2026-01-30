@@ -17,7 +17,7 @@ export default function Home() {
           {/* Compact Header with Disclaimer */}
           <div className="text-center mb-6">
             <h1 className="text-3xl md:text-5xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent mb-2">
-              LuckyDraw AI
+              PB Lucky Draw AI
             </h1>
             <p className="text-muted-foreground text-sm max-w-lg mx-auto mb-3 text-balance">
               Pattern-powered lottery number generation for entertainment only

@@ -14,8 +14,8 @@ const spaceMono = Space_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "LuckyDraw AI - Intelligent Lottery Number Generator",
-  description: "Generate lottery numbers using advanced AI pattern analysis and historical data",
+  title: "PB Lucky Draw AI - Intelligent Lottery Number Generator",
+  description: "Generate Powerball lottery numbers using advanced AI pattern analysis and historical data",
 };
 
 export default function RootLayout({

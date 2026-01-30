@@ -26,7 +26,7 @@ interface GeneratedNumbers {
 }
 
 const strategies = [
-  { id: "ultimate" as Strategy, name: "Ultimate AI", icon: Sparkles, color: "from-primary to-secondary" },
+  { id: "ultimate" as Strategy, name: "Ultimate AI", icon: Sparkles, color: "from-violet-600 to-purple-600" },
   { id: "hot" as Strategy, name: "Super Hot", icon: Flame, color: "from-red-500 to-orange-500" },
   { id: "cold" as Strategy, name: "Contrarian", icon: Snowflake, color: "from-blue-500 to-cyan-500" },
   { id: "balanced" as Strategy, name: "Balanced", icon: Scale, color: "from-green-500 to-emerald-500" },
