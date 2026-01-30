@@ -295,7 +295,7 @@ export function LotteryGenerator() {
         </div>
       )}
       
-      {/* Strategy Selection - Mobile optimized grid with themed effects */}
+      {/* Strategy Selection - Clean mobile optimized grid */}
       <div className="grid grid-cols-3 sm:flex sm:flex-wrap sm:justify-center gap-1.5 sm:gap-2 px-1 sm:px-0">
         {strategies.map((strategy) => {
           const Icon = strategy.icon;
@@ -304,177 +304,81 @@ export function LotteryGenerator() {
             <button
               key={strategy.id}
               onClick={() => setSelectedStrategy(strategy.id)}
-              className={`relative overflow-hidden flex items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-2 sm:py-1.5 rounded-xl sm:rounded-full text-[11px] sm:text-sm font-medium transition-all ${
+              className={`flex items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-2 sm:py-1.5 rounded-xl sm:rounded-full text-[11px] sm:text-sm font-medium transition-all ${
                 isSelected
-                  ? `bg-gradient-to-r ${strategy.color} text-white shadow-lg scale-[1.02] sm:scale-105`
+                  ? `bg-gradient-to-r ${strategy.color} text-white shadow-lg`
                   : "bg-card/60 text-muted-foreground hover:bg-card hover:text-foreground border border-border/50"
               }`}
             >
-              {/* Fire effect for Super Hot */}
-              {strategy.id === "hot" && isSelected && (
-                <div className="absolute inset-0 pointer-events-none">
-                  <div className="absolute bottom-0 left-1/4 w-2 h-3 bg-gradient-to-t from-orange-500 via-yellow-400 to-transparent rounded-full animate-flicker opacity-80" />
-                  <div className="absolute bottom-0 left-1/2 w-2.5 h-4 bg-gradient-to-t from-red-500 via-orange-400 to-transparent rounded-full animate-flicker-delay opacity-80" />
-                  <div className="absolute bottom-0 right-1/4 w-2 h-3 bg-gradient-to-t from-orange-500 via-yellow-400 to-transparent rounded-full animate-flicker-fast opacity-80" />
-                </div>
-              )}
-              
-              {/* Ice crystals for Contrarian */}
-              {strategy.id === "cold" && isSelected && (
-                <div className="absolute inset-0 pointer-events-none">
-                  <div className="absolute top-1 left-2 w-1 h-1 bg-cyan-200 rotate-45 animate-twinkle opacity-80" />
-                  <div className="absolute top-2 right-3 w-1.5 h-1.5 bg-blue-200 rotate-12 animate-twinkle-delay opacity-80" />
-                  <div className="absolute bottom-1 left-1/2 w-1 h-1 bg-white rotate-45 animate-twinkle-fast opacity-80" />
-                </div>
-              )}
-              
-              {/* Sparkles for Ultimate AI */}
-              {strategy.id === "ultimate" && isSelected && (
-                <div className="absolute inset-0 pointer-events-none">
-                  <div className="absolute top-1 left-3 w-1 h-1 bg-purple-200 rounded-full animate-sparkle opacity-90" />
-                  <div className="absolute top-2 right-2 w-1.5 h-1.5 bg-violet-300 rounded-full animate-sparkle-delay opacity-90" />
-                  <div className="absolute bottom-1 left-1/3 w-1 h-1 bg-purple-100 rounded-full animate-sparkle-fast opacity-90" />
-                </div>
-              )}
-              
-              {/* Balance scales effect */}
-              {strategy.id === "balanced" && isSelected && (
-                <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-r from-green-400/20 via-transparent to-emerald-400/20 animate-balance" />
-                </div>
-              )}
-              
-              {/* Frequency wave effect */}
-              {strategy.id === "frequency" && isSelected && (
-                <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 animate-wave opacity-60" />
-                </div>
-              )}
-              
-              {/* Random dice dots */}
-              {strategy.id === "random" && isSelected && (
-                <div className="absolute inset-0 pointer-events-none">
-                  <div className="absolute top-1.5 left-2 w-1 h-1 bg-slate-300 rounded-full animate-dice opacity-70" />
-                  <div className="absolute bottom-1.5 right-2 w-1 h-1 bg-slate-300 rounded-full animate-dice-delay opacity-70" />
-                </div>
-              )}
-              
-              <Icon className={`relative z-10 w-3 h-3 sm:w-3.5 sm:h-3.5 ${isSelected && strategy.id === "hot" ? "animate-pulse" : ""}`} />
-              <span className="relative z-10 truncate">{strategy.name}</span>
+              <Icon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+              <span className="truncate">{strategy.name}</span>
             </button>
           );
         })}
       </div>
 
-      {/* Generate Button - Themed with visual effects */}
+      {/* Generate Button - Clean with strategy icon */}
       <div className="text-center py-3 sm:py-4">
         <Button
           onClick={() => generateNumbers(selectedStrategy)}
           disabled={isGenerating}
           size="lg"
-          className={`relative overflow-hidden px-6 sm:px-8 py-5 sm:py-6 text-sm sm:text-base font-bold rounded-full transition-all shadow-xl ${
+          className={`px-6 sm:px-8 py-5 sm:py-6 text-sm sm:text-base font-bold rounded-full transition-all shadow-xl ${
             isGenerating 
               ? "bg-muted text-muted-foreground" 
               : `bg-gradient-to-r ${selectedStrategyData?.color} text-white hover:scale-105 hover:shadow-2xl active:scale-95`
           }`}
         >
-          {/* Fire effect for Super Hot */}
-          {selectedStrategy === "hot" && !isGenerating && (
-            <div className="absolute inset-0 pointer-events-none">
-              <div className="absolute bottom-0 left-[15%] w-3 h-5 bg-gradient-to-t from-orange-500 via-yellow-400 to-transparent rounded-full animate-flicker opacity-70" />
-              <div className="absolute bottom-0 left-[30%] w-4 h-7 bg-gradient-to-t from-red-500 via-orange-400 to-transparent rounded-full animate-flicker-delay opacity-70" />
-              <div className="absolute bottom-0 left-[50%] w-3 h-6 bg-gradient-to-t from-yellow-500 via-orange-300 to-transparent rounded-full animate-flicker-fast opacity-70" />
-              <div className="absolute bottom-0 left-[70%] w-4 h-7 bg-gradient-to-t from-red-500 via-orange-400 to-transparent rounded-full animate-flicker opacity-70" />
-              <div className="absolute bottom-0 left-[85%] w-3 h-5 bg-gradient-to-t from-orange-500 via-yellow-400 to-transparent rounded-full animate-flicker-delay opacity-70" />
-            </div>
-          )}
-          
-          {/* Ice crystals for Contrarian */}
-          {selectedStrategy === "cold" && !isGenerating && (
-            <div className="absolute inset-0 pointer-events-none">
-              <div className="absolute top-2 left-[10%] w-2 h-2 bg-cyan-200 rotate-45 animate-twinkle opacity-80" />
-              <div className="absolute top-3 left-[25%] w-1.5 h-1.5 bg-white rotate-12 animate-twinkle-delay opacity-90" />
-              <div className="absolute bottom-2 left-[40%] w-2 h-2 bg-blue-200 rotate-45 animate-twinkle-fast opacity-80" />
-              <div className="absolute top-2 right-[25%] w-1.5 h-1.5 bg-cyan-100 rotate-45 animate-twinkle opacity-90" />
-              <div className="absolute bottom-3 right-[15%] w-2 h-2 bg-white rotate-12 animate-twinkle-delay opacity-80" />
-            </div>
-          )}
-          
-          {/* Sparkles for Ultimate AI */}
-          {selectedStrategy === "ultimate" && !isGenerating && (
-            <div className="absolute inset-0 pointer-events-none">
-              <div className="absolute top-2 left-[12%] w-2 h-2 bg-purple-200 rounded-full animate-sparkle opacity-90" />
-              <div className="absolute top-3 left-[30%] w-1.5 h-1.5 bg-violet-300 rounded-full animate-sparkle-delay opacity-80" />
-              <div className="absolute bottom-2 left-[45%] w-2 h-2 bg-purple-100 rounded-full animate-sparkle-fast opacity-90" />
-              <div className="absolute top-2 right-[20%] w-1.5 h-1.5 bg-violet-200 rounded-full animate-sparkle opacity-80" />
-              <div className="absolute bottom-3 right-[10%] w-2 h-2 bg-purple-300 rounded-full animate-sparkle-delay opacity-90" />
-            </div>
-          )}
-          
-          {/* Balance glow effect */}
-          {selectedStrategy === "balanced" && !isGenerating && (
-            <div className="absolute inset-0 pointer-events-none overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-r from-green-300/30 via-transparent to-emerald-300/30 animate-balance" />
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 bg-white/30 rounded-full animate-pulse" />
-            </div>
-          )}
-          
-          {/* Frequency wave effect */}
-          {selectedStrategy === "frequency" && !isGenerating && (
-            <div className="absolute inset-0 pointer-events-none overflow-hidden">
-              <div className="absolute bottom-0 left-0 right-0 h-2 bg-gradient-to-r from-purple-400/50 via-pink-400/50 to-purple-400/50 animate-wave" />
-              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-pink-400/30 via-purple-400/30 to-pink-400/30 animate-wave" style={{ animationDelay: '0.5s' }} />
-            </div>
-          )}
-          
-          {/* Random floating dots */}
-          {selectedStrategy === "random" && !isGenerating && (
-            <div className="absolute inset-0 pointer-events-none">
-              <div className="absolute top-2 left-[15%] w-1.5 h-1.5 bg-slate-200 rounded-full animate-dice opacity-70" />
-              <div className="absolute bottom-2 left-[30%] w-2 h-2 bg-slate-300 rounded-full animate-dice-delay opacity-60" />
-              <div className="absolute top-3 right-[35%] w-1.5 h-1.5 bg-slate-200 rounded-full animate-dice opacity-70" />
-              <div className="absolute bottom-3 right-[20%] w-2 h-2 bg-slate-300 rounded-full animate-dice-delay opacity-60" />
-              <div className="absolute top-1/2 right-[10%] w-1.5 h-1.5 bg-slate-200 rounded-full animate-dice opacity-70" />
-            </div>
-          )}
-          
           {isGenerating ? (
             <>
-              <Sparkles className="relative z-10 w-4 h-4 sm:w-5 sm:h-5 mr-2 animate-spin" />
-              <span className="relative z-10">Generating...</span>
+              <div className="w-4 h-4 sm:w-5 sm:h-5 mr-2 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              Generating...
             </>
           ) : (
             <>
-              {selectedStrategy === "hot" && <Flame className="relative z-10 w-4 h-4 sm:w-5 sm:h-5 mr-2 animate-pulse" />}
-              {selectedStrategy === "cold" && <Snowflake className="relative z-10 w-4 h-4 sm:w-5 sm:h-5 mr-2 animate-pulse" />}
-              {selectedStrategy === "ultimate" && <Sparkles className="relative z-10 w-4 h-4 sm:w-5 sm:h-5 mr-2 animate-pulse" />}
-              {selectedStrategy === "balanced" && <Scale className="relative z-10 w-4 h-4 sm:w-5 sm:h-5 mr-2" />}
-              {selectedStrategy === "frequency" && <TrendingUp className="relative z-10 w-4 h-4 sm:w-5 sm:h-5 mr-2" />}
-              {selectedStrategy === "random" && <Shuffle className="relative z-10 w-4 h-4 sm:w-5 sm:h-5 mr-2" />}
-              <span className="relative z-10">Generate Numbers</span>
+              {selectedStrategy === "hot" && <Flame className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />}
+              {selectedStrategy === "cold" && <Snowflake className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />}
+              {selectedStrategy === "ultimate" && <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />}
+              {selectedStrategy === "balanced" && <Scale className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />}
+              {selectedStrategy === "frequency" && <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />}
+              {selectedStrategy === "random" && <Shuffle className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />}
+              Generate Numbers
             </>
           )}
         </Button>
       </div>
 
-      {/* Generated Numbers - Clean layout */}
-      {generatedNumbers && (
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+      {/* Number Balls Display - Always visible */}
+      <div>
+        {generatedNumbers && (
           <div className="text-center mb-3 sm:mb-4">
             <span className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider">
               {generatedNumbers.strategy} Strategy
             </span>
           </div>
+        )}
 
-          <div className="flex flex-wrap justify-center items-center gap-2 sm:gap-3 mb-4 sm:mb-6 px-2">
-            {generatedNumbers.whiteBalls.map((num, idx) => (
-              <NumberBall key={idx} number={num} variant="white" delay={idx * 100} />
-            ))}
-            <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-muted-foreground/50 mx-0.5 sm:mx-1" />
-            <NumberBall number={generatedNumbers.powerball} variant="power" delay={500} />
-          </div>
+        <div className="flex flex-wrap justify-center items-center gap-2 sm:gap-3 mb-4 sm:mb-6 px-2">
+          {[0, 1, 2, 3, 4].map((idx) => (
+            <NumberBall 
+              key={idx} 
+              number={generatedNumbers?.whiteBalls[idx] ?? null} 
+              variant="white" 
+              delay={idx * 150}
+              isLoading={isGenerating}
+            />
+          ))}
+          <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-muted-foreground/50 mx-0.5 sm:mx-1" />
+          <NumberBall 
+            number={generatedNumbers?.powerball ?? null} 
+            variant="power" 
+            delay={750}
+            isLoading={isGenerating}
+          />
+        </div>
 
-          {/* Minimal Analysis Row */}
+        {/* Analysis Row - Only show when we have numbers */}
+        {generatedNumbers && (
           <div className="flex flex-wrap justify-center gap-2 sm:gap-4 text-[10px] sm:text-xs text-muted-foreground mb-4 sm:mb-6 px-4">
             <span>
               <span className="text-red-400 font-medium">{generatedNumbers.analysis.hotCount}</span> hot
@@ -495,7 +399,9 @@ export function LotteryGenerator() {
               }`}>{generatedNumbers.analysis.powerballStatus}</span>
             </span>
           </div>
+        )}
 
+        {generatedNumbers && (
           <div className="flex justify-center gap-1.5 sm:gap-2">
             <Button onClick={saveSet} variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground text-xs sm:text-sm h-8 sm:h-9 px-3">
               <Save className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-1.5" />
@@ -506,8 +412,8 @@ export function LotteryGenerator() {
               Again
             </Button>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Saved Sets - Compact */}
       {savedSets.length > 0 && (
