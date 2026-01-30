@@ -1,10 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { NumberBall } from "@/components/number-ball";
 import { Fireworks } from "@/components/fireworks";
-import { Sparkles, Flame, Snowflake, Scale, TrendingUp, Shuffle, Save, RefreshCw } from "lucide-react";
+import { Sparkles, Flame, Snowflake, Scale, TrendingUp, Shuffle, Save, RefreshCw, Trash2 } from "lucide-react";
+
+const STORAGE_KEY_SAVED = "lottery-saved-sets";
+const STORAGE_KEY_LAST = "lottery-last-generated";
 
 type Strategy = "ultimate" | "hot" | "cold" | "balanced" | "frequency" | "random";
 
@@ -37,6 +40,45 @@ export function LotteryGenerator() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [savedSets, setSavedSets] = useState<GeneratedNumbers[]>([]);
   const [showFireworks, setShowFireworks] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  // Load from localStorage on mount
+  useEffect(() => {
+    const savedData = localStorage.getItem(STORAGE_KEY_SAVED);
+    const lastGenerated = localStorage.getItem(STORAGE_KEY_LAST);
+    
+    if (savedData) {
+      try {
+        setSavedSets(JSON.parse(savedData));
+      } catch (e) {
+        console.error("Failed to parse saved sets", e);
+      }
+    }
+    
+    if (lastGenerated) {
+      try {
+        setGeneratedNumbers(JSON.parse(lastGenerated));
+      } catch (e) {
+        console.error("Failed to parse last generated", e);
+      }
+    }
+    
+    setIsHydrated(true);
+  }, []);
+
+  // Save to localStorage when savedSets changes
+  useEffect(() => {
+    if (isHydrated) {
+      localStorage.setItem(STORAGE_KEY_SAVED, JSON.stringify(savedSets));
+    }
+  }, [savedSets, isHydrated]);
+
+  // Save last generated numbers
+  useEffect(() => {
+    if (isHydrated && generatedNumbers) {
+      localStorage.setItem(STORAGE_KEY_LAST, JSON.stringify(generatedNumbers));
+    }
+  }, [generatedNumbers, isHydrated]);
 
   const generateNumbers = (strategy: Strategy) => {
     setIsGenerating(true);
@@ -213,6 +255,15 @@ export function LotteryGenerator() {
     }
   };
 
+  const deleteSet = (index: number) => {
+    setSavedSets(savedSets.filter((_, i) => i !== index));
+  };
+
+  const clearAllSets = () => {
+    setSavedSets([]);
+    localStorage.removeItem(STORAGE_KEY_SAVED);
+  };
+
   const selectedStrategyData = strategies.find((s) => s.id === selectedStrategy);
 
   return (
@@ -322,10 +373,18 @@ export function LotteryGenerator() {
       {/* Saved Sets - Compact */}
       {savedSets.length > 0 && (
         <div className="pt-6 border-t border-border/30">
-          <p className="text-xs text-muted-foreground text-center mb-3">Saved Sets</p>
+          <div className="flex items-center justify-center gap-3 mb-3">
+            <p className="text-xs text-muted-foreground">Saved Sets ({savedSets.length})</p>
+            <button 
+              onClick={clearAllSets}
+              className="text-xs text-muted-foreground hover:text-destructive transition-colors"
+            >
+              Clear All
+            </button>
+          </div>
           <div className="space-y-2">
             {savedSets.map((set, idx) => (
-              <div key={idx} className="flex items-center justify-center gap-2 py-2">
+              <div key={idx} className="flex items-center justify-center gap-2 py-2 group">
                 <span className="text-xs text-muted-foreground w-16 text-right">{set.strategy}</span>
                 <div className="flex items-center gap-1.5">
                   {set.whiteBalls.map((num, i) => (
@@ -337,6 +396,12 @@ export function LotteryGenerator() {
                     {set.powerball}
                   </div>
                 </div>
+                <button
+                  onClick={() => deleteSet(idx)}
+                  className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive ml-1"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
               </div>
             ))}
           </div>
