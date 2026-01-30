@@ -87,7 +87,7 @@ const jsonLd = {
   "@type": "WebApplication",
   "name": "PB Lucky Draw AI",
   "description": "Generate smart Powerball lottery numbers with AI-powered pattern analysis",
-  "url": "https://pb-lucky.vercel.app",
+  "url": "https://pblucky.com",
   "applicationCategory": "Entertainment",
   "operatingSystem": "Any",
   "offers": {
