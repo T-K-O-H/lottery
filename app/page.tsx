@@ -12,20 +12,18 @@ export default function Home() {
     <main className="relative min-h-screen overflow-hidden bg-background">
       <ParticleBackground />
       
-      <div className="relative z-10 container mx-auto px-4 py-8 md:py-16">
-        <div className="max-w-6xl mx-auto">
-          {/* Header */}
-          <div className="text-center mb-12 md:mb-16">
-            <div className="inline-block mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-primary to-secondary animate-glow" />
-                <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
-                  LuckyDraw AI
-                </h1>
-              </div>
-            </div>
-            <p className="text-muted-foreground text-lg md:text-xl max-w-2xl mx-auto text-balance">
-              Harness the power of advanced pattern analysis and historical data to generate your lottery numbers
+      <div className="relative z-10 container mx-auto px-4 py-6 md:py-10">
+        <div className="max-w-4xl mx-auto">
+          {/* Compact Header with Disclaimer */}
+          <div className="text-center mb-6">
+            <h1 className="text-3xl md:text-5xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent mb-2">
+              LuckyDraw AI
+            </h1>
+            <p className="text-muted-foreground text-sm max-w-lg mx-auto mb-3 text-balance">
+              Pattern-powered lottery number generation for entertainment only
+            </p>
+            <p className="text-xs text-muted-foreground/70 max-w-md mx-auto">
+              Lottery is random. Past patterns don't predict future results. Play responsibly.
             </p>
           </div>
 
@@ -33,10 +31,10 @@ export default function Home() {
           <LotteryGenerator />
 
           {/* Stats Toggle */}
-          <div className="text-center mt-12">
+          <div className="text-center mt-10">
             <button
               onClick={() => setShowStats(!showStats)}
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors underline-offset-4 hover:underline"
             >
               {showStats ? "Hide" : "Show"} Pattern Statistics
             </button>
@@ -44,19 +42,10 @@ export default function Home() {
 
           {/* Stats Panel */}
           {showStats && (
-            <div className="mt-8">
+            <div className="mt-6">
               <StatsPanel />
             </div>
           )}
-
-          {/* Disclaimer */}
-          <div className="mt-16 p-6 rounded-lg bg-card border border-border">
-            <p className="text-xs text-muted-foreground text-center">
-              <strong className="text-foreground">Disclaimer:</strong> This generator is for entertainment purposes only. 
-              Lottery numbers are random and past patterns do not predict future results. 
-              Always play responsibly and within your means.
-            </p>
-          </div>
         </div>
       </div>
     </main>
