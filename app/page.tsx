@@ -14,18 +14,11 @@ export default function Home() {
       
       <div className="relative z-10 container mx-auto px-3 sm:px-4 py-4 sm:py-6 md:py-10">
         <div className="max-w-4xl mx-auto">
-          {/* Compact Header with Logo and Disclaimer */}
+          {/* Compact Header with Disclaimer */}
           <div className="text-center mb-4 sm:mb-6">
-            <div className="flex flex-col items-center gap-2 mb-2 sm:mb-3">
-              <img 
-                src="/pb-lucky-logo.jpg" 
-                alt="PB Lucky" 
-                className="h-16 sm:h-20 md:h-24 w-auto rounded-full shadow-lg shadow-primary/20"
-              />
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 bg-clip-text text-transparent">
-                PB Lucky
-              </h1>
-            </div>
+            <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent mb-1 sm:mb-2">
+              PB Lucky Draw AI
+            </h1>
             <p className="text-muted-foreground text-xs sm:text-sm max-w-lg mx-auto mb-2 sm:mb-3 text-balance px-2">
               Pattern-powered lottery number generation for entertainment only
             </p>
