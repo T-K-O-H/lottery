@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { LotteryGenerator } from "@/components/lottery-generator";
 import { StatsPanel } from "@/components/stats-panel";
 import { ParticleBackground } from "@/components/particle-background";
@@ -46,6 +47,21 @@ export default function Home() {
               <StatsPanel />
             </div>
           )}
+
+          {/* Footer Navigation */}
+          <footer className="mt-12 pt-6 border-t border-border/30">
+            <nav className="flex flex-wrap justify-center gap-4 sm:gap-6 text-xs sm:text-sm text-muted-foreground">
+              <Link href="/how-it-works" className="hover:text-foreground transition-colors">
+                How It Works
+              </Link>
+              <Link href="/faq" className="hover:text-foreground transition-colors">
+                FAQ
+              </Link>
+            </nav>
+            <p className="text-center text-[10px] sm:text-xs text-muted-foreground/60 mt-4">
+              For entertainment purposes only. Play responsibly.
+            </p>
+          </footer>
         </div>
       </div>
     </main>
