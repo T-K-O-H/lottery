@@ -16,12 +16,15 @@ export default function Home() {
         <div className="max-w-4xl mx-auto">
           {/* Compact Header with Logo and Disclaimer */}
           <div className="text-center mb-4 sm:mb-6">
-            <div className="flex justify-center mb-2 sm:mb-3">
+            <div className="flex flex-col items-center gap-2 mb-2 sm:mb-3">
               <img 
-                src="/pb-lucky-logo.svg" 
+                src="/pb-lucky-logo.jpg" 
                 alt="PB Lucky" 
-                className="h-12 sm:h-16 md:h-20 w-auto"
+                className="h-16 sm:h-20 md:h-24 w-auto rounded-full shadow-lg shadow-primary/20"
               />
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 bg-clip-text text-transparent">
+                PB Lucky
+              </h1>
             </div>
             <p className="text-muted-foreground text-xs sm:text-sm max-w-lg mx-auto mb-2 sm:mb-3 text-balance px-2">
               Pattern-powered lottery number generation for entertainment only
