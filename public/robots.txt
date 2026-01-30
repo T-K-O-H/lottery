@@ -1,0 +1,7 @@
+# robots.txt for PB Lucky Draw AI
+
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://pblucky.com/sitemap.xml
