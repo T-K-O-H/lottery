@@ -298,7 +298,7 @@ export function LotteryGenerator() {
       {/* Global Counter */}
       {globalCount !== null && (
         <div className="text-center">
-          <span className="text-[10px] sm:text-xs text-muted-foreground">
+          <span className="text-xs sm:text-sm text-muted-foreground">
             <span className="font-semibold text-foreground">{globalCount.toLocaleString()}</span> lucky numbers generated worldwide
           </span>
         </div>
@@ -313,7 +313,7 @@ export function LotteryGenerator() {
             <button
               key={strategy.id}
               onClick={() => setSelectedStrategy(strategy.id)}
-              className={`flex items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-2 sm:py-1.5 rounded-xl sm:rounded-full text-[11px] sm:text-sm font-medium transition-all ${
+              className={`flex items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-2 sm:py-1.5 rounded-xl sm:rounded-full text-xs sm:text-sm md:text-base font-medium transition-all ${
                 isSelected
                   ? `bg-gradient-to-r ${strategy.color} text-white shadow-lg`
                   : "bg-card/60 text-muted-foreground hover:bg-card hover:text-foreground border border-border/50"
@@ -332,7 +332,7 @@ export function LotteryGenerator() {
           onClick={() => generateNumbers(selectedStrategy)}
           disabled={isGenerating}
           size="lg"
-          className={`px-6 sm:px-8 py-5 sm:py-6 text-sm sm:text-base font-bold rounded-full transition-all shadow-xl ${
+          className={`px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-bold rounded-full transition-all shadow-xl ${
             isGenerating 
               ? "bg-muted text-muted-foreground" 
               : `bg-gradient-to-r ${selectedStrategyData?.color} text-white hover:scale-105 hover:shadow-2xl active:scale-95`
@@ -361,7 +361,7 @@ export function LotteryGenerator() {
       <div>
         {generatedNumbers && (
           <div className="text-center mb-3 sm:mb-4">
-            <span className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider">
+            <span className="text-xs sm:text-sm md:text-base text-muted-foreground uppercase tracking-wider">
               {generatedNumbers.strategy} Strategy
             </span>
           </div>
@@ -388,7 +388,7 @@ export function LotteryGenerator() {
 
         {/* Analysis Row - Only show when we have numbers */}
         {generatedNumbers && (
-          <div className="flex flex-wrap justify-center gap-2 sm:gap-4 text-[10px] sm:text-xs text-muted-foreground mb-4 sm:mb-6 px-4">
+          <div className="flex flex-wrap justify-center gap-2 sm:gap-4 text-xs sm:text-sm md:text-base text-muted-foreground mb-4 sm:mb-6 px-4">
             <span>
               <span className="text-red-400 font-medium">{generatedNumbers.analysis.hotCount}</span> hot
             </span>
@@ -412,11 +412,11 @@ export function LotteryGenerator() {
 
         {generatedNumbers && (
           <div className="flex justify-center gap-1.5 sm:gap-2">
-            <Button onClick={saveSet} variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground text-xs sm:text-sm h-8 sm:h-9 px-3">
+            <Button onClick={saveSet} variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground text-xs sm:text-sm md:text-base h-8 sm:h-9 px-3">
               <Save className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-1.5" />
               Save
             </Button>
-            <Button onClick={() => generateNumbers(selectedStrategy)} variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground text-xs sm:text-sm h-8 sm:h-9 px-3">
+            <Button onClick={() => generateNumbers(selectedStrategy)} variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground text-xs sm:text-sm md:text-base h-8 sm:h-9 px-3">
               <RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-1.5" />
               Again
             </Button>
@@ -428,10 +428,10 @@ export function LotteryGenerator() {
       {savedSets.length > 0 && (
         <div className="pt-4 sm:pt-6 border-t border-border/30">
           <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-            <p className="text-[10px] sm:text-xs text-muted-foreground">Saved Sets ({savedSets.length})</p>
+            <p className="text-xs sm:text-sm md:text-base text-muted-foreground">Saved Sets ({savedSets.length})</p>
             <button 
               onClick={clearAllSets}
-              className="text-[10px] sm:text-xs text-muted-foreground hover:text-destructive transition-colors"
+              className="text-xs sm:text-sm md:text-base text-muted-foreground hover:text-destructive transition-colors"
             >
               Clear All
             </button>
@@ -439,14 +439,14 @@ export function LotteryGenerator() {
           <div className="space-y-1.5 sm:space-y-2">
             {savedSets.map((set, idx) => (
               <div key={idx} className="flex items-center justify-center gap-1.5 sm:gap-2 py-1.5 sm:py-2 group">
-                <span className="text-[9px] sm:text-xs text-muted-foreground w-12 sm:w-16 text-right truncate">{set.strategy}</span>
+                <span className="text-xs sm:text-sm md:text-base text-muted-foreground w-12 sm:w-16 text-right truncate">{set.strategy}</span>
                 <div className="flex items-center gap-1 sm:gap-1.5">
                   {set.whiteBalls.map((num, i) => (
-                    <div key={i} className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gradient-to-br from-white/90 to-white/70 flex items-center justify-center text-black text-[10px] sm:text-xs font-bold shadow">
+                    <div key={i} className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gradient-to-br from-white/90 to-white/70 flex items-center justify-center text-black text-xs sm:text-sm font-bold shadow">
                       {num}
                     </div>
                   ))}
-                  <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gradient-to-br from-red-600 to-red-800 flex items-center justify-center text-white text-[10px] sm:text-xs font-bold shadow">
+                  <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gradient-to-br from-red-600 to-red-800 flex items-center justify-center text-white text-xs sm:text-sm font-bold shadow">
                     {set.powerball}
                   </div>
                 </div>
