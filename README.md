@@ -8,7 +8,7 @@ Just remember that hot/cold etc it doesnt matter numbers are random. It's just f
 
 Best of luck! and if you win don't forget about me!!!
 
-If theres enough interest I'm considering making this into a nice working web app that's free to use.
+try the web version http://pblucky.com
 
 ## 📊 Features
 
