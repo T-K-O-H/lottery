@@ -34,26 +34,29 @@ function secureRandomInt(min: number, max: number): number {
 }
 
 // Number count configuration
+type GameMode = "digits" | "pool";
+
 interface NumberConfig {
+  mode: GameMode;
   count: number;
-  maxNumber: number;
-  bonusMax: number;
+  maxNumber: number;     // 9 for digits (0-9), 69 for pool (1-69)
+  bonusMax: number;      // 0 = no bonus ball
+  allowRepeats: boolean;
   label: string;
 }
 
 const NUMBER_CONFIGS: NumberConfig[] = [
-  { count: 4, maxNumber: 49, bonusMax: 20, label: "4 Numbers" },
-  { count: 5, maxNumber: 69, bonusMax: 26, label: "5 Numbers" },
-  { count: 6, maxNumber: 59, bonusMax: 30, label: "6 Numbers" },
+  { mode: "digits", count: 4, maxNumber: 9, bonusMax: 0, allowRepeats: true, label: "4 Digits" },
+  { mode: "pool", count: 5, maxNumber: 69, bonusMax: 26, allowRepeats: false, label: "5 + Bonus" },
 ];
 
-const DEFAULT_CONFIG = NUMBER_CONFIGS[1]; // 5 Numbers (current behavior)
+const DEFAULT_CONFIG = NUMBER_CONFIGS[1]; // 5 + Bonus (current behavior)
 
 type Strategy = "ultimate" | "hot" | "cold" | "balanced" | "frequency" | "random";
 
 interface GeneratedNumbers {
   whiteBalls: number[];
-  powerball: number;
+  powerball: number | null;
   strategy: string;
   numberConfig: NumberConfig;
   analysis: {
@@ -110,7 +113,7 @@ export function LotteryGenerator() {
     if (savedConfig) {
       try {
         const parsed = JSON.parse(savedConfig);
-        const match = NUMBER_CONFIGS.find((c) => c.count === parsed.count);
+        const match = NUMBER_CONFIGS.find((c) => c.label === parsed.label);
         if (match) setNumberConfig(match);
       } catch (e) {
         console.error("Failed to parse config", e);
@@ -172,164 +175,235 @@ export function LotteryGenerator() {
     }, 1500);
   };
 
-  const generateNumbersForStrategy = (strategy: Strategy): GeneratedNumbers => {
-    let whiteBalls: number[] = [];
+  // --- Digit mode helpers (each position 0-9, repeats allowed) ---
+  const generateDigits = (count: number): number[] =>
+    Array.from({ length: count }, () => secureRandomInt(0, 9));
 
-    switch (strategy) {
-      case "ultimate":  whiteBalls = generateUltimateStrategy(numberConfig); break;
-      case "hot":       whiteBalls = generateHotStrategy(numberConfig); break;
-      case "cold":      whiteBalls = generateColdStrategy(numberConfig); break;
-      case "balanced":  whiteBalls = generateBalancedStrategy(numberConfig); break;
-      case "frequency": whiteBalls = generateFrequencyStrategy(numberConfig); break;
-      case "random":    whiteBalls = generateRandomNumbers(numberConfig); break;
-    }
-
-    const powerball = secureRandomInt(1, numberConfig.bonusMax);
-    const strategyName = strategies.find((s) => s.id === strategy)?.name || strategy;
-
-    return {
-      whiteBalls: whiteBalls.sort((a, b) => a - b),
-      powerball,
-      strategy: strategyName,
-      numberConfig,
-      analysis: analyzeNumbers(whiteBalls, powerball),
-    };
-  };
-
-  const generateUltimateStrategy = (config: NumberConfig): number[] => {
-    const hotNumbers = [23, 36, 39, 21, 32, 16, 38, 18, 10, 42].filter((n) => n <= config.maxNumber);
-    const numbers: number[] = [];
-    const hotCount = Math.min(
-      secureRandomInt(Math.ceil(config.count * 0.6), Math.ceil(config.count * 0.7)),
-      hotNumbers.length
-    );
-    let added = 0;
-    while (added < hotCount) {
-      const num = hotNumbers[secureRandomInt(0, hotNumbers.length - 1)];
-      if (!numbers.includes(num)) { numbers.push(num); added++; }
-    }
-    while (numbers.length < config.count) {
-      const num = secureRandomInt(1, config.maxNumber);
-      if (!numbers.includes(num)) numbers.push(num);
-    }
-    return numbers;
-  };
-
-  const generateHotStrategy = (config: NumberConfig): number[] => {
-    const hotNumbers = [23, 36, 39, 21, 32, 16, 38, 18, 10, 42, 14, 58, 53].filter((n) => n <= config.maxNumber);
-    const numbers: number[] = [];
-    const hotCount = Math.min(
-      secureRandomInt(Math.ceil(config.count * 0.8), config.count),
-      hotNumbers.length
-    );
-    let added = 0;
-    while (added < hotCount) {
-      const num = hotNumbers[secureRandomInt(0, hotNumbers.length - 1)];
-      if (!numbers.includes(num)) { numbers.push(num); added++; }
-    }
-    while (numbers.length < config.count) {
-      const num = secureRandomInt(1, config.maxNumber);
-      if (!numbers.includes(num)) numbers.push(num);
-    }
-    return numbers;
-  };
-
-  const generateColdStrategy = (config: NumberConfig): number[] => {
-    const allColdNumbers = [60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 50, 51, 52];
-    const coldNumbers = allColdNumbers.filter((n) => n <= config.maxNumber);
-    const pool = coldNumbers.length >= 3
-      ? coldNumbers
-      : Array.from({ length: Math.min(10, config.maxNumber) }, (_, i) => config.maxNumber - i);
-    const coldCount = Math.min(
-      secureRandomInt(Math.ceil(config.count * 0.8), config.count),
-      pool.length
-    );
-    const numbers: number[] = [];
-    let added = 0;
-    while (added < coldCount) {
-      const num = pool[secureRandomInt(0, pool.length - 1)];
-      if (!numbers.includes(num)) { numbers.push(num); added++; }
-    }
-    while (numbers.length < config.count) {
-      const num = secureRandomInt(1, config.maxNumber);
-      if (!numbers.includes(num)) numbers.push(num);
-    }
-    return numbers;
-  };
-
-  const generateBalancedStrategy = (config: NumberConfig): number[] => {
-    const hotNumbers = [23, 36, 39, 21, 32].filter((n) => n <= config.maxNumber);
-    const allColdNumbers = [65, 66, 67, 68, 69];
-    const coldNumbers = allColdNumbers.filter((n) => n <= config.maxNumber);
-    const coldPool = coldNumbers.length >= 2
-      ? coldNumbers
-      : Array.from({ length: 5 }, (_, i) => config.maxNumber - i);
-    const hotCount = Math.max(1, Math.floor(config.count * 0.4));
-    const coldCount = Math.max(1, Math.floor(config.count * 0.4));
-    const numbers: number[] = [];
-    let added = 0;
-    while (added < hotCount && added < hotNumbers.length) {
-      const num = hotNumbers[secureRandomInt(0, hotNumbers.length - 1)];
-      if (!numbers.includes(num)) { numbers.push(num); added++; }
-    }
-    added = 0;
-    while (added < coldCount && numbers.length < config.count) {
-      const num = coldPool[secureRandomInt(0, coldPool.length - 1)];
-      if (!numbers.includes(num)) { numbers.push(num); added++; }
-    }
-    while (numbers.length < config.count) {
-      const num = secureRandomInt(1, config.maxNumber);
-      if (!numbers.includes(num)) numbers.push(num);
-    }
-    return numbers;
-  };
-
-  const generateFrequencyStrategy = (config: NumberConfig): number[] => {
-    const threshold60 = Math.floor(config.maxNumber * 0.58);
-    const threshold85 = Math.floor(config.maxNumber * 0.87);
-    const weights = Array.from({ length: config.maxNumber }, (_, i) => {
-      const num = i + 1;
-      if (num <= threshold60) return 3;
-      if (num <= threshold85) return 2;
-      return 1;
-    });
+  const generateDigitsWeighted = (count: number, weights: number[]): number[] => {
     const totalWeight = weights.reduce((a, b) => a + b, 0);
-    const numbers: number[] = [];
-    while (numbers.length < config.count) {
+    return Array.from({ length: count }, () => {
       const rand = secureRandom() * totalWeight;
       let sum = 0;
       for (let i = 0; i < weights.length; i++) {
         sum += weights[i];
-        if (rand <= sum) {
-          const num = i + 1;
-          if (!numbers.includes(num)) numbers.push(num);
-          break;
-        }
+        if (rand <= sum) return i;
       }
-    }
-    return numbers;
+      return 9;
+    });
   };
 
-  const generateRandomNumbers = (config: NumberConfig): number[] => {
+  // Hot digits: 1, 3, 7, 9 appear more often in historical pick-4 data
+  const hotDigits = [1, 3, 7, 9];
+  // Cold digits: 0, 4, 5 appear less often
+  const coldDigits = [0, 4, 5];
+
+  // --- Pool mode helpers (unique numbers, no repeats) ---
+  const pickUnique = (count: number, min: number, max: number): number[] => {
     const numbers: number[] = [];
-    while (numbers.length < config.count) {
-      const num = secureRandomInt(1, config.maxNumber);
+    while (numbers.length < count) {
+      const num = secureRandomInt(min, max);
       if (!numbers.includes(num)) numbers.push(num);
     }
     return numbers;
   };
 
-  const analyzeNumbers = (whiteBalls: number[], powerball: number) => {
-    const hotNumbers = [23, 36, 39, 21, 32, 16, 38, 18, 10, 42];
-    const coldNumbers = [60, 61, 62, 63, 64, 65, 66, 67, 68, 69];
-    const hotCount = whiteBalls.filter((n) => hotNumbers.includes(n)).length;
-    const coldCount = whiteBalls.filter((n) => coldNumbers.includes(n)).length;
+  const pickFromPool = (count: number, pool: number[], existing: number[] = []): number[] => {
+    const numbers = [...existing];
+    let added = 0;
+    while (added < count) {
+      const num = pool[secureRandomInt(0, pool.length - 1)];
+      if (!numbers.includes(num)) { numbers.push(num); added++; }
+    }
+    return numbers;
+  };
+
+  const generateNumbersForStrategy = (strategy: Strategy): GeneratedNumbers => {
+    const isDigitMode = numberConfig.mode === "digits";
+    let whiteBalls: number[];
+
+    if (isDigitMode) {
+      whiteBalls = generateDigitStrategy(strategy, numberConfig);
+    } else {
+      whiteBalls = generatePoolStrategy(strategy, numberConfig);
+    }
+
+    const powerball = numberConfig.bonusMax > 0 ? secureRandomInt(1, numberConfig.bonusMax) : null;
+    const strategyName = strategies.find((s) => s.id === strategy)?.name || strategy;
+
+    return {
+      whiteBalls: isDigitMode ? whiteBalls : whiteBalls.sort((a, b) => a - b),
+      powerball,
+      strategy: strategyName,
+      numberConfig,
+      analysis: analyzeNumbers(whiteBalls, powerball, numberConfig),
+    };
+  };
+
+  // --- Digit mode strategies (0-9 per position, repeats OK) ---
+  const generateDigitStrategy = (strategy: Strategy, config: NumberConfig): number[] => {
+    const { count } = config;
+    switch (strategy) {
+      case "ultimate": {
+        // Mix: ~60% positions from hot digits, rest random
+        const hotPositions = Math.ceil(count * 0.6);
+        return Array.from({ length: count }, (_, i) =>
+          i < hotPositions
+            ? hotDigits[secureRandomInt(0, hotDigits.length - 1)]
+            : secureRandomInt(0, 9)
+        );
+      }
+      case "hot": {
+        // ~80% hot digits
+        const hotPositions = Math.ceil(count * 0.8);
+        return Array.from({ length: count }, (_, i) =>
+          i < hotPositions
+            ? hotDigits[secureRandomInt(0, hotDigits.length - 1)]
+            : secureRandomInt(0, 9)
+        );
+      }
+      case "cold": {
+        // ~80% cold digits
+        const coldPositions = Math.ceil(count * 0.8);
+        return Array.from({ length: count }, (_, i) =>
+          i < coldPositions
+            ? coldDigits[secureRandomInt(0, coldDigits.length - 1)]
+            : secureRandomInt(0, 9)
+        );
+      }
+      case "balanced": {
+        // 2 hot, 1 cold, 1 random
+        const hotCount = Math.max(1, Math.floor(count * 0.4));
+        const coldCount = Math.max(1, Math.floor(count * 0.4));
+        const result: number[] = [];
+        for (let i = 0; i < hotCount; i++) result.push(hotDigits[secureRandomInt(0, hotDigits.length - 1)]);
+        for (let i = 0; i < coldCount; i++) result.push(coldDigits[secureRandomInt(0, coldDigits.length - 1)]);
+        while (result.length < count) result.push(secureRandomInt(0, 9));
+        return result;
+      }
+      case "frequency": {
+        // Weighted: hot digits 3x, neutral 2x, cold 1x
+        const weights = Array.from({ length: 10 }, (_, d) => {
+          if (hotDigits.includes(d)) return 3;
+          if (coldDigits.includes(d)) return 1;
+          return 2;
+        });
+        return generateDigitsWeighted(count, weights);
+      }
+      case "random":
+      default:
+        return generateDigits(count);
+    }
+  };
+
+  // --- Pool mode strategies (unique numbers from 1-maxNumber) ---
+  const generatePoolStrategy = (strategy: Strategy, config: NumberConfig): number[] => {
+    const hotNumbers = [23, 36, 39, 21, 32, 16, 38, 18, 10, 42].filter((n) => n <= config.maxNumber);
+    const allColdNumbers = [60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 50, 51, 52];
+    const coldNumbers = allColdNumbers.filter((n) => n <= config.maxNumber);
+    const coldPool = coldNumbers.length >= 3
+      ? coldNumbers
+      : Array.from({ length: Math.min(10, config.maxNumber) }, (_, i) => config.maxNumber - i);
+
+    switch (strategy) {
+      case "ultimate": {
+        const hotCount = Math.min(
+          secureRandomInt(Math.ceil(config.count * 0.6), Math.ceil(config.count * 0.7)),
+          hotNumbers.length
+        );
+        const numbers = pickFromPool(hotCount, hotNumbers);
+        while (numbers.length < config.count) {
+          const num = secureRandomInt(1, config.maxNumber);
+          if (!numbers.includes(num)) numbers.push(num);
+        }
+        return numbers;
+      }
+      case "hot": {
+        const hotCount = Math.min(
+          secureRandomInt(Math.ceil(config.count * 0.8), config.count),
+          hotNumbers.length
+        );
+        const numbers = pickFromPool(hotCount, hotNumbers);
+        while (numbers.length < config.count) {
+          const num = secureRandomInt(1, config.maxNumber);
+          if (!numbers.includes(num)) numbers.push(num);
+        }
+        return numbers;
+      }
+      case "cold": {
+        const coldCount = Math.min(
+          secureRandomInt(Math.ceil(config.count * 0.8), config.count),
+          coldPool.length
+        );
+        const numbers = pickFromPool(coldCount, coldPool);
+        while (numbers.length < config.count) {
+          const num = secureRandomInt(1, config.maxNumber);
+          if (!numbers.includes(num)) numbers.push(num);
+        }
+        return numbers;
+      }
+      case "balanced": {
+        const hc = Math.max(1, Math.floor(config.count * 0.4));
+        const cc = Math.max(1, Math.floor(config.count * 0.4));
+        let numbers = pickFromPool(hc, hotNumbers);
+        numbers = pickFromPool(cc, coldPool, numbers);
+        while (numbers.length < config.count) {
+          const num = secureRandomInt(1, config.maxNumber);
+          if (!numbers.includes(num)) numbers.push(num);
+        }
+        return numbers;
+      }
+      case "frequency": {
+        const threshold60 = Math.floor(config.maxNumber * 0.58);
+        const threshold85 = Math.floor(config.maxNumber * 0.87);
+        const weights = Array.from({ length: config.maxNumber }, (_, i) => {
+          const num = i + 1;
+          if (num <= threshold60) return 3;
+          if (num <= threshold85) return 2;
+          return 1;
+        });
+        const totalWeight = weights.reduce((a, b) => a + b, 0);
+        const numbers: number[] = [];
+        while (numbers.length < config.count) {
+          const rand = secureRandom() * totalWeight;
+          let sum = 0;
+          for (let i = 0; i < weights.length; i++) {
+            sum += weights[i];
+            if (rand <= sum) {
+              const num = i + 1;
+              if (!numbers.includes(num)) numbers.push(num);
+              break;
+            }
+          }
+        }
+        return numbers;
+      }
+      case "random":
+      default:
+        return pickUnique(config.count, 1, config.maxNumber);
+    }
+  };
+
+  const analyzeNumbers = (whiteBalls: number[], powerball: number | null, config: NumberConfig) => {
+    const isDigitMode = config.mode === "digits";
+    const poolHot = [23, 36, 39, 21, 32, 16, 38, 18, 10, 42];
+    const poolCold = [60, 61, 62, 63, 64, 65, 66, 67, 68, 69];
+
+    const hotCount = isDigitMode
+      ? whiteBalls.filter((n) => hotDigits.includes(n)).length
+      : whiteBalls.filter((n) => poolHot.includes(n)).length;
+    const coldCount = isDigitMode
+      ? whiteBalls.filter((n) => coldDigits.includes(n)).length
+      : whiteBalls.filter((n) => poolCold.includes(n)).length;
     const neutralCount = whiteBalls.length - hotCount - coldCount;
     const sum = whiteBalls.reduce((a, b) => a + b, 0);
     const evenCount = whiteBalls.filter((n) => n % 2 === 0).length;
-    let powerballStatus = "neutral";
-    if ([24, 18, 6, 20, 21].includes(powerball)) powerballStatus = "hot";
-    if ([8, 9, 12, 15, 25].includes(powerball)) powerballStatus = "cold";
+
+    let powerballStatus = "none";
+    if (powerball !== null) {
+      powerballStatus = "neutral";
+      if ([24, 18, 6, 20, 21].includes(powerball)) powerballStatus = "hot";
+      if ([8, 9, 12, 15, 25].includes(powerball)) powerballStatus = "cold";
+    }
     return { hotCount, coldCount, neutralCount, powerballStatus, sum, evenCount };
   };
 
@@ -368,13 +442,13 @@ export function LotteryGenerator() {
         <div className="inline-flex items-center bg-card/60 border border-border/50 rounded-full p-1 gap-0.5">
           {NUMBER_CONFIGS.map((config) => (
             <button
-              key={config.count}
+              key={config.label}
               onClick={() => {
                 setNumberConfig(config);
                 setGeneratedNumbers(null);
               }}
               className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
-                numberConfig.count === config.count
+                numberConfig.label === config.label
                   ? "bg-primary text-primary-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
               }`}
@@ -459,14 +533,18 @@ export function LotteryGenerator() {
               maxNumber={numberConfig.maxNumber}
             />
           ))}
-          <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-muted-foreground/50 mx-0.5 sm:mx-1" />
-          <NumberBall
-            number={generatedNumbers?.powerball ?? null}
-            variant="power"
-            delay={numberConfig.count * 150}
-            isLoading={isGenerating}
-            maxNumber={numberConfig.bonusMax}
-          />
+          {numberConfig.bonusMax > 0 && (
+            <>
+              <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-muted-foreground/50 mx-0.5 sm:mx-1" />
+              <NumberBall
+                number={generatedNumbers?.powerball ?? null}
+                variant="power"
+                delay={numberConfig.count * 150}
+                isLoading={isGenerating}
+                maxNumber={numberConfig.bonusMax}
+              />
+            </>
+          )}
         </div>
 
         {/* Analysis Row - Only show when we have numbers */}
@@ -484,12 +562,14 @@ export function LotteryGenerator() {
             <span>
               E/O: <span className="text-foreground font-medium">{generatedNumbers.analysis.evenCount}/{generatedNumbers.whiteBalls.length - generatedNumbers.analysis.evenCount}</span>
             </span>
-            <span>
-              PB: <span className={`font-medium ${
-                generatedNumbers.analysis.powerballStatus === 'hot' ? 'text-red-400' : 
-                generatedNumbers.analysis.powerballStatus === 'cold' ? 'text-blue-400' : 'text-foreground'
-              }`}>{generatedNumbers.analysis.powerballStatus}</span>
-            </span>
+            {generatedNumbers.analysis.powerballStatus !== "none" && (
+              <span>
+                PB: <span className={`font-medium ${
+                  generatedNumbers.analysis.powerballStatus === 'hot' ? 'text-red-400' :
+                  generatedNumbers.analysis.powerballStatus === 'cold' ? 'text-blue-400' : 'text-foreground'
+                }`}>{generatedNumbers.analysis.powerballStatus}</span>
+              </span>
+            )}
           </div>
         )}
 
@@ -529,9 +609,11 @@ export function LotteryGenerator() {
                       {num}
                     </div>
                   ))}
-                  <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gradient-to-br from-red-600 to-red-800 flex items-center justify-center text-white text-sm font-bold shadow">
-                    {set.powerball}
-                  </div>
+                  {set.powerball !== null && (
+                    <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gradient-to-br from-red-600 to-red-800 flex items-center justify-center text-white text-sm font-bold shadow">
+                      {set.powerball}
+                    </div>
+                  )}
                 </div>
                 <button
                   onClick={() => deleteSet(idx)}
