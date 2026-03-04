@@ -46,11 +46,12 @@ interface NumberConfig {
 }
 
 const NUMBER_CONFIGS: NumberConfig[] = [
-  { mode: "digits", count: 4, maxNumber: 9, bonusMax: 0, allowRepeats: true, label: "4 Digits" },
-  { mode: "pool", count: 5, maxNumber: 69, bonusMax: 26, allowRepeats: false, label: "5 + Bonus" },
+  { mode: "digits", count: 3, maxNumber: 9, bonusMax: 0, allowRepeats: true, label: "3 Pick" },
+  { mode: "digits", count: 4, maxNumber: 9, bonusMax: 0, allowRepeats: true, label: "4 Pick" },
+  { mode: "pool", count: 5, maxNumber: 69, bonusMax: 26, allowRepeats: false, label: "5 PB" },
 ];
 
-const DEFAULT_CONFIG = NUMBER_CONFIGS[1]; // 5 + Bonus (current behavior)
+const DEFAULT_CONFIG = NUMBER_CONFIGS[2]; // 5 PB (current behavior)
 
 type Strategy = "ultimate" | "hot" | "cold" | "balanced" | "frequency" | "random";
 
@@ -179,17 +180,27 @@ export function LotteryGenerator() {
 
   // --- Pick 4 pattern-based generation system ---
 
-  // Real combination type distribution (out of 10,000 total combos)
-  const PATTERN_WEIGHTS: [string, number][] = [
-    ["single", 50.4],      // all 4 different digits (e.g., 1-2-3-4)
-    ["double", 43.2],      // one pair + 2 singles (e.g., 1-2-3-3)
-    ["doublePair", 2.7],   // two pairs (e.g., 1-1-2-2)
-    ["triple", 3.6],       // three same + 1 different (e.g., 1-2-2-2)
-    ["quad", 0.1],         // all 4 same (e.g., 1-1-1-1)
-  ];
+  // Real combination type distributions by digit count
+  const PATTERN_WEIGHTS_BY_COUNT: Record<number, [string, number][]> = {
+    3: [
+      ["single", 72],        // all 3 different (e.g., 1-2-3) — 720/1000
+      ["double", 27],        // one pair + 1 single (e.g., 1-1-2) — 270/1000
+      ["triple", 1],         // all 3 same (e.g., 1-1-1) — 10/1000
+    ],
+    4: [
+      ["single", 50.4],      // all 4 different (e.g., 1-2-3-4) — 5040/10000
+      ["double", 43.2],      // one pair + 2 singles (e.g., 1-2-3-3) — 4320/10000
+      ["doublePair", 2.7],   // two pairs (e.g., 1-1-2-2) — 270/10000
+      ["triple", 3.6],       // three same + 1 different (e.g., 1-2-2-2) — 360/10000
+      ["quad", 0.1],         // all 4 same (e.g., 1-1-1-1) — 10/10000
+    ],
+  };
 
-  // Optimal digit sum range — covers ~70% of winning combos (bell curve peaks at 18)
-  const SUM_TARGET = { min: 13, max: 23 };
+  // Optimal digit sum ranges — covers ~70% of winning combos
+  const SUM_TARGET_BY_COUNT: Record<number, { min: number; max: number }> = {
+    3: { min: 9, max: 18 },   // Pick 3: bell curve peaks at 13-14
+    4: { min: 13, max: 23 },  // Pick 4: bell curve peaks at 18
+  };
 
   // Hot digits: appear more frequently in historical pick-4 data
   const hotDigits = [1, 3, 7, 9];
@@ -227,64 +238,72 @@ export function LotteryGenerator() {
     return available.length > 0 ? available[secureRandomInt(0, available.length - 1)] : secureRandomInt(0, 9);
   };
 
-  // Select a pattern type using real statistical weights
-  const pickPattern = (): string => {
-    const totalWeight = PATTERN_WEIGHTS.reduce((s, [, w]) => s + w, 0);
+  // Select a pattern type using real statistical weights for the given digit count
+  const pickPattern = (count: number): string => {
+    const weights = PATTERN_WEIGHTS_BY_COUNT[count] || PATTERN_WEIGHTS_BY_COUNT[4];
+    const totalWeight = weights.reduce((s, [, w]) => s + w, 0);
     const rand = secureRandom() * totalWeight;
     let cumulative = 0;
-    for (const [pattern, weight] of PATTERN_WEIGHTS) {
+    for (const [pattern, weight] of weights) {
       cumulative += weight;
       if (rand <= cumulative) return pattern;
     }
     return "single";
   };
 
-  // Generate 4 digits matching a specific pattern type
-  const generateByPattern = (pattern: string, biasPool?: number[], biasChance = 0.5): number[] => {
+  // Generate digits matching a specific pattern type (supports 3 and 4 digits)
+  const generateByPattern = (count: number, pattern: string, biasPool?: number[], biasChance = 0.5): number[] => {
     switch (pattern) {
       case "single": {
-        // All 4 different
-        const d1 = pickDigit(biasPool, biasChance);
-        const d2 = pickDifferentDigit([d1], biasPool, biasChance);
-        const d3 = pickDifferentDigit([d1, d2], biasPool, biasChance);
-        const d4 = pickDifferentDigit([d1, d2, d3], biasPool, biasChance);
-        return shuffle([d1, d2, d3, d4]);
+        // All different
+        const digits: number[] = [];
+        digits.push(pickDigit(biasPool, biasChance));
+        for (let i = 1; i < count; i++) {
+          digits.push(pickDifferentDigit(digits, biasPool, biasChance));
+        }
+        return shuffle(digits);
       }
       case "double": {
-        // One pair + 2 singles
+        // One pair + remaining singles
         const pair = pickDigit(biasPool, biasChance);
-        const s1 = pickDifferentDigit([pair], biasPool, biasChance);
-        const s2 = pickDifferentDigit([pair, s1], biasPool, biasChance);
-        return shuffle([pair, pair, s1, s2]);
+        const singles: number[] = [];
+        for (let i = 0; i < count - 2; i++) {
+          singles.push(pickDifferentDigit([pair, ...singles], biasPool, biasChance));
+        }
+        return shuffle([pair, pair, ...singles]);
       }
       case "doublePair": {
-        // Two different pairs
+        // Two different pairs (4-digit only)
         const p1 = pickDigit(biasPool, biasChance);
         const p2 = pickDifferentDigit([p1], biasPool, biasChance);
         return shuffle([p1, p1, p2, p2]);
       }
       case "triple": {
-        // Three same + 1 different
+        // Three same + remaining different
         const tripleDigit = pickDigit(biasPool, biasChance);
-        const other = pickDifferentDigit([tripleDigit], biasPool, biasChance);
-        return shuffle([tripleDigit, tripleDigit, tripleDigit, other]);
+        const others: number[] = [];
+        for (let i = 0; i < count - 3; i++) {
+          others.push(pickDifferentDigit([tripleDigit, ...others], biasPool, biasChance));
+        }
+        return shuffle([tripleDigit, tripleDigit, tripleDigit, ...others]);
       }
       case "quad": {
-        // All 4 same
+        // All 4 same (4-digit only)
         const d = pickDigit(biasPool, biasChance);
         return [d, d, d, d];
       }
       default:
-        return [pickDigit(), pickDigit(), pickDigit(), pickDigit()];
+        return Array.from({ length: count }, () => pickDigit());
     }
   };
 
   // Generate digits with optional sum-range targeting (retries up to maxAttempts)
   const generateWithSumTarget = (
+    count: number,
     generator: () => number[],
-    targetSum = SUM_TARGET,
     maxAttempts = 20
   ): number[] => {
+    const targetSum = SUM_TARGET_BY_COUNT[count] || SUM_TARGET_BY_COUNT[4];
     for (let i = 0; i < maxAttempts; i++) {
       const digits = generator();
       const sum = digits.reduce((a, b) => a + b, 0);
@@ -348,35 +367,36 @@ export function LotteryGenerator() {
   };
 
   // --- Digit mode strategies (pattern-based, sum-targeted) ---
-  const generateDigitStrategy = (strategy: Strategy, _config: NumberConfig): number[] => {
+  const generateDigitStrategy = (strategy: Strategy, config: NumberConfig): number[] => {
+    const { count } = config;
     switch (strategy) {
       case "ultimate": {
         // Pattern-based + sum targeting + hot/neutral mix (lotterypowerpicks recommendation)
         const mixPool = [...hotDigits, ...neutralDigits]; // hot + neutral, no cold
-        return generateWithSumTarget(() => {
-          const pattern = pickPattern();
-          return generateByPattern(pattern, mixPool, 0.6);
+        return generateWithSumTarget(count, () => {
+          const pattern = pickPattern(count);
+          return generateByPattern(count, pattern, mixPool, 0.6);
         });
       }
       case "hot": {
         // Pattern-based, biased heavily toward hot digits
-        return generateWithSumTarget(() => {
-          const pattern = pickPattern();
-          return generateByPattern(pattern, hotDigits, 0.8);
+        return generateWithSumTarget(count, () => {
+          const pattern = pickPattern(count);
+          return generateByPattern(count, pattern, hotDigits, 0.8);
         });
       }
       case "cold": {
         // Pattern-based, biased toward cold digits
-        const pattern = pickPattern();
-        return generateByPattern(pattern, coldDigits, 0.8);
+        const pattern = pickPattern(count);
+        return generateByPattern(count, pattern, coldDigits, 0.8);
         // No sum targeting — cold digits naturally produce lower sums
       }
       case "balanced": {
         // Pattern-based + strict sum targeting + balanced digit distribution
         const allDigits = [...hotDigits, ...coldDigits, ...neutralDigits];
-        return generateWithSumTarget(() => {
-          const pattern = pickPattern();
-          return generateByPattern(pattern, allDigits, 0.4);
+        return generateWithSumTarget(count, () => {
+          const pattern = pickPattern(count);
+          return generateByPattern(count, pattern, allDigits, 0.4);
         });
       }
       case "frequency": {
@@ -386,16 +406,16 @@ export function LotteryGenerator() {
           ...neutralDigits, ...neutralDigits,            // 2x weight
           ...coldDigits,                                 // 1x weight
         ];
-        return generateWithSumTarget(() => {
-          const pattern = pickPattern();
-          return generateByPattern(pattern, weightedPool, 0.7);
+        return generateWithSumTarget(count, () => {
+          const pattern = pickPattern(count);
+          return generateByPattern(count, pattern, weightedPool, 0.7);
         });
       }
       case "random":
       default: {
         // Structurally realistic (real pattern distribution) but no bias or sum filter
-        const pattern = pickPattern();
-        return generateByPattern(pattern);
+        const pattern = pickPattern(count);
+        return generateByPattern(count, pattern);
       }
     }
   };
@@ -512,7 +532,8 @@ export function LotteryGenerator() {
 
     // Digit mode extras
     const pattern = isDigitMode ? detectPattern(whiteBalls) : undefined;
-    const sumInRange = isDigitMode ? (sum >= SUM_TARGET.min && sum <= SUM_TARGET.max) : undefined;
+    const sumTarget = SUM_TARGET_BY_COUNT[config.count];
+    const sumInRange = isDigitMode && sumTarget ? (sum >= sumTarget.min && sum <= sumTarget.max) : undefined;
 
     return { hotCount, coldCount, neutralCount, powerballStatus, sum, evenCount, pattern, sumInRange };
   };
