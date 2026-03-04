@@ -17,6 +17,37 @@ const strategyEffects: Record<string, "fireworks" | "lightning" | "snowflakes" |
 
 const STORAGE_KEY_SAVED = "lottery-saved-sets";
 const STORAGE_KEY_LAST = "lottery-last-generated";
+const STORAGE_KEY_CONFIG = "lottery-number-config";
+
+// Crypto-quality RNG helpers
+function secureRandom(): number {
+  if (typeof crypto !== "undefined" && crypto.getRandomValues) {
+    const array = new Uint32Array(1);
+    crypto.getRandomValues(array);
+    return array[0] / (0xFFFFFFFF + 1);
+  }
+  return Math.random();
+}
+
+function secureRandomInt(min: number, max: number): number {
+  return Math.floor(secureRandom() * (max - min + 1)) + min;
+}
+
+// Number count configuration
+interface NumberConfig {
+  count: number;
+  maxNumber: number;
+  bonusMax: number;
+  label: string;
+}
+
+const NUMBER_CONFIGS: NumberConfig[] = [
+  { count: 4, maxNumber: 49, bonusMax: 20, label: "4 Numbers" },
+  { count: 5, maxNumber: 69, bonusMax: 26, label: "5 Numbers" },
+  { count: 6, maxNumber: 59, bonusMax: 30, label: "6 Numbers" },
+];
+
+const DEFAULT_CONFIG = NUMBER_CONFIGS[1]; // 5 Numbers (current behavior)
 
 type Strategy = "ultimate" | "hot" | "cold" | "balanced" | "frequency" | "random";
 
@@ -24,6 +55,7 @@ interface GeneratedNumbers {
   whiteBalls: number[];
   powerball: number;
   strategy: string;
+  numberConfig: NumberConfig;
   analysis: {
     hotCount: number;
     coldCount: number;
@@ -51,6 +83,7 @@ export function LotteryGenerator() {
   const [showFireworks, setShowFireworks] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
   const [globalCount, setGlobalCount] = useState<number | null>(null);
+  const [numberConfig, setNumberConfig] = useState<NumberConfig>(DEFAULT_CONFIG);
 
   // Load from localStorage on mount and fetch global counter
   useEffect(() => {
@@ -72,7 +105,18 @@ export function LotteryGenerator() {
         console.error("Failed to parse last generated", e);
       }
     }
-    
+
+    const savedConfig = localStorage.getItem(STORAGE_KEY_CONFIG);
+    if (savedConfig) {
+      try {
+        const parsed = JSON.parse(savedConfig);
+        const match = NUMBER_CONFIGS.find((c) => c.count === parsed.count);
+        if (match) setNumberConfig(match);
+      } catch (e) {
+        console.error("Failed to parse config", e);
+      }
+    }
+
     // Fetch global generation count
     fetch("/api/counter")
       .then((res) => res.json())
@@ -95,6 +139,13 @@ export function LotteryGenerator() {
       localStorage.setItem(STORAGE_KEY_LAST, JSON.stringify(generatedNumbers));
     }
   }, [generatedNumbers, isHydrated]);
+
+  // Save number config
+  useEffect(() => {
+    if (isHydrated) {
+      localStorage.setItem(STORAGE_KEY_CONFIG, JSON.stringify(numberConfig));
+    }
+  }, [numberConfig, isHydrated]);
 
   const generateNumbers = (strategy: Strategy) => {
     setIsGenerating(true);
@@ -123,138 +174,146 @@ export function LotteryGenerator() {
 
   const generateNumbersForStrategy = (strategy: Strategy): GeneratedNumbers => {
     let whiteBalls: number[] = [];
-    let powerball: number;
-    
+
     switch (strategy) {
-      case "ultimate":
-        whiteBalls = generateUltimateStrategy();
-        powerball = Math.floor(Math.random() * 26) + 1;
-        break;
-      case "hot":
-        whiteBalls = generateHotStrategy();
-        powerball = Math.floor(Math.random() * 26) + 1;
-        break;
-      case "cold":
-        whiteBalls = generateColdStrategy();
-        powerball = Math.floor(Math.random() * 26) + 1;
-        break;
-      case "balanced":
-        whiteBalls = generateBalancedStrategy();
-        powerball = Math.floor(Math.random() * 26) + 1;
-        break;
-      case "frequency":
-        whiteBalls = generateFrequencyStrategy();
-        powerball = Math.floor(Math.random() * 26) + 1;
-        break;
-      case "random":
-        whiteBalls = generateRandomNumbers();
-        powerball = Math.floor(Math.random() * 26) + 1;
-        break;
+      case "ultimate":  whiteBalls = generateUltimateStrategy(numberConfig); break;
+      case "hot":       whiteBalls = generateHotStrategy(numberConfig); break;
+      case "cold":      whiteBalls = generateColdStrategy(numberConfig); break;
+      case "balanced":  whiteBalls = generateBalancedStrategy(numberConfig); break;
+      case "frequency": whiteBalls = generateFrequencyStrategy(numberConfig); break;
+      case "random":    whiteBalls = generateRandomNumbers(numberConfig); break;
     }
 
+    const powerball = secureRandomInt(1, numberConfig.bonusMax);
     const strategyName = strategies.find((s) => s.id === strategy)?.name || strategy;
-    
+
     return {
       whiteBalls: whiteBalls.sort((a, b) => a - b),
       powerball,
       strategy: strategyName,
+      numberConfig,
       analysis: analyzeNumbers(whiteBalls, powerball),
     };
   };
 
-  const generateUltimateStrategy = (): number[] => {
-    const hotNumbers = [23, 36, 39, 21, 32, 16, 38, 18, 10, 42];
+  const generateUltimateStrategy = (config: NumberConfig): number[] => {
+    const hotNumbers = [23, 36, 39, 21, 32, 16, 38, 18, 10, 42].filter((n) => n <= config.maxNumber);
     const numbers: number[] = [];
-    const hotCount = Math.floor(Math.random() * 2) + 3;
-    for (let i = 0; i < hotCount; i++) {
-      const num = hotNumbers[Math.floor(Math.random() * hotNumbers.length)];
-      if (!numbers.includes(num)) numbers.push(num);
+    const hotCount = Math.min(
+      secureRandomInt(Math.ceil(config.count * 0.6), Math.ceil(config.count * 0.7)),
+      hotNumbers.length
+    );
+    let added = 0;
+    while (added < hotCount) {
+      const num = hotNumbers[secureRandomInt(0, hotNumbers.length - 1)];
+      if (!numbers.includes(num)) { numbers.push(num); added++; }
     }
-    while (numbers.length < 5) {
-      const num = Math.floor(Math.random() * 69) + 1;
+    while (numbers.length < config.count) {
+      const num = secureRandomInt(1, config.maxNumber);
       if (!numbers.includes(num)) numbers.push(num);
     }
     return numbers;
   };
 
-  const generateHotStrategy = (): number[] => {
-    const hotNumbers = [23, 36, 39, 21, 32, 16, 38, 18, 10, 42, 14, 58, 53, 61, 62];
+  const generateHotStrategy = (config: NumberConfig): number[] => {
+    const hotNumbers = [23, 36, 39, 21, 32, 16, 38, 18, 10, 42, 14, 58, 53].filter((n) => n <= config.maxNumber);
     const numbers: number[] = [];
-    const hotCount = Math.floor(Math.random() * 2) + 4;
-    while (numbers.length < hotCount && numbers.length < 5) {
-      const num = hotNumbers[Math.floor(Math.random() * hotNumbers.length)];
-      if (!numbers.includes(num)) numbers.push(num);
+    const hotCount = Math.min(
+      secureRandomInt(Math.ceil(config.count * 0.8), config.count),
+      hotNumbers.length
+    );
+    let added = 0;
+    while (added < hotCount) {
+      const num = hotNumbers[secureRandomInt(0, hotNumbers.length - 1)];
+      if (!numbers.includes(num)) { numbers.push(num); added++; }
     }
-    while (numbers.length < 5) {
-      const num = Math.floor(Math.random() * 69) + 1;
+    while (numbers.length < config.count) {
+      const num = secureRandomInt(1, config.maxNumber);
       if (!numbers.includes(num)) numbers.push(num);
     }
     return numbers;
   };
 
-  const generateColdStrategy = (): number[] => {
-    const coldNumbers = [60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 50, 51, 52];
+  const generateColdStrategy = (config: NumberConfig): number[] => {
+    const allColdNumbers = [60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 50, 51, 52];
+    const coldNumbers = allColdNumbers.filter((n) => n <= config.maxNumber);
+    const pool = coldNumbers.length >= 3
+      ? coldNumbers
+      : Array.from({ length: Math.min(10, config.maxNumber) }, (_, i) => config.maxNumber - i);
+    const coldCount = Math.min(
+      secureRandomInt(Math.ceil(config.count * 0.8), config.count),
+      pool.length
+    );
     const numbers: number[] = [];
-    const coldCount = Math.floor(Math.random() * 2) + 4;
-    while (numbers.length < coldCount && numbers.length < 5) {
-      const num = coldNumbers[Math.floor(Math.random() * coldNumbers.length)];
-      if (!numbers.includes(num)) numbers.push(num);
+    let added = 0;
+    while (added < coldCount) {
+      const num = pool[secureRandomInt(0, pool.length - 1)];
+      if (!numbers.includes(num)) { numbers.push(num); added++; }
     }
-    while (numbers.length < 5) {
-      const num = Math.floor(Math.random() * 69) + 1;
+    while (numbers.length < config.count) {
+      const num = secureRandomInt(1, config.maxNumber);
       if (!numbers.includes(num)) numbers.push(num);
     }
     return numbers;
   };
 
-  const generateBalancedStrategy = (): number[] => {
-    const hotNumbers = [23, 36, 39, 21, 32];
-    const coldNumbers = [65, 66, 67, 68, 69];
+  const generateBalancedStrategy = (config: NumberConfig): number[] => {
+    const hotNumbers = [23, 36, 39, 21, 32].filter((n) => n <= config.maxNumber);
+    const allColdNumbers = [65, 66, 67, 68, 69];
+    const coldNumbers = allColdNumbers.filter((n) => n <= config.maxNumber);
+    const coldPool = coldNumbers.length >= 2
+      ? coldNumbers
+      : Array.from({ length: 5 }, (_, i) => config.maxNumber - i);
+    const hotCount = Math.max(1, Math.floor(config.count * 0.4));
+    const coldCount = Math.max(1, Math.floor(config.count * 0.4));
     const numbers: number[] = [];
-    for (let i = 0; i < 2; i++) {
-      const num = hotNumbers[Math.floor(Math.random() * hotNumbers.length)];
-      if (!numbers.includes(num)) numbers.push(num);
+    let added = 0;
+    while (added < hotCount && added < hotNumbers.length) {
+      const num = hotNumbers[secureRandomInt(0, hotNumbers.length - 1)];
+      if (!numbers.includes(num)) { numbers.push(num); added++; }
     }
-    for (let i = 0; i < 2; i++) {
-      const num = coldNumbers[Math.floor(Math.random() * coldNumbers.length)];
-      if (!numbers.includes(num)) numbers.push(num);
+    added = 0;
+    while (added < coldCount && numbers.length < config.count) {
+      const num = coldPool[secureRandomInt(0, coldPool.length - 1)];
+      if (!numbers.includes(num)) { numbers.push(num); added++; }
     }
-    while (numbers.length < 5) {
-      const num = Math.floor(Math.random() * 69) + 1;
+    while (numbers.length < config.count) {
+      const num = secureRandomInt(1, config.maxNumber);
       if (!numbers.includes(num)) numbers.push(num);
     }
     return numbers;
   };
 
-  const generateFrequencyStrategy = (): number[] => {
-    const weights = Array.from({ length: 69 }, (_, i) => {
+  const generateFrequencyStrategy = (config: NumberConfig): number[] => {
+    const threshold60 = Math.floor(config.maxNumber * 0.58);
+    const threshold85 = Math.floor(config.maxNumber * 0.87);
+    const weights = Array.from({ length: config.maxNumber }, (_, i) => {
       const num = i + 1;
-      if (num <= 40) return 3;
-      if (num <= 60) return 2;
+      if (num <= threshold60) return 3;
+      if (num <= threshold85) return 2;
       return 1;
     });
+    const totalWeight = weights.reduce((a, b) => a + b, 0);
     const numbers: number[] = [];
-    while (numbers.length < 5) {
-      const rand = Math.random() * weights.reduce((a, b) => a + b, 0);
+    while (numbers.length < config.count) {
+      const rand = secureRandom() * totalWeight;
       let sum = 0;
       for (let i = 0; i < weights.length; i++) {
         sum += weights[i];
         if (rand <= sum) {
           const num = i + 1;
-          if (!numbers.includes(num)) {
-            numbers.push(num);
-            break;
-          }
+          if (!numbers.includes(num)) numbers.push(num);
+          break;
         }
       }
     }
     return numbers;
   };
 
-  const generateRandomNumbers = (): number[] => {
+  const generateRandomNumbers = (config: NumberConfig): number[] => {
     const numbers: number[] = [];
-    while (numbers.length < 5) {
-      const num = Math.floor(Math.random() * 69) + 1;
+    while (numbers.length < config.count) {
+      const num = secureRandomInt(1, config.maxNumber);
       if (!numbers.includes(num)) numbers.push(num);
     }
     return numbers;
@@ -265,7 +324,7 @@ export function LotteryGenerator() {
     const coldNumbers = [60, 61, 62, 63, 64, 65, 66, 67, 68, 69];
     const hotCount = whiteBalls.filter((n) => hotNumbers.includes(n)).length;
     const coldCount = whiteBalls.filter((n) => coldNumbers.includes(n)).length;
-    const neutralCount = 5 - hotCount - coldCount;
+    const neutralCount = whiteBalls.length - hotCount - coldCount;
     const sum = whiteBalls.reduce((a, b) => a + b, 0);
     const evenCount = whiteBalls.filter((n) => n % 2 === 0).length;
     let powerballStatus = "neutral";
@@ -304,6 +363,28 @@ export function LotteryGenerator() {
         </div>
       )}
       
+      {/* Number Count Selector */}
+      <div className="flex justify-center">
+        <div className="inline-flex items-center bg-card/60 border border-border/50 rounded-full p-1 gap-0.5">
+          {NUMBER_CONFIGS.map((config) => (
+            <button
+              key={config.count}
+              onClick={() => {
+                setNumberConfig(config);
+                setGeneratedNumbers(null);
+              }}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                numberConfig.count === config.count
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {config.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Strategy Selection - Clean mobile optimized grid */}
       <div className="grid grid-cols-3 sm:flex sm:flex-wrap sm:justify-center gap-1.5 sm:gap-2 px-1 sm:px-0">
         {strategies.map((strategy) => {
@@ -368,21 +449,23 @@ export function LotteryGenerator() {
         )}
 
         <div className="flex flex-wrap justify-center items-center gap-2 sm:gap-3 mb-4 sm:mb-6 px-2">
-          {[0, 1, 2, 3, 4].map((idx) => (
-            <NumberBall 
-              key={idx} 
-              number={generatedNumbers?.whiteBalls[idx] ?? null} 
-              variant="white" 
+          {Array.from({ length: numberConfig.count }, (_, idx) => (
+            <NumberBall
+              key={idx}
+              number={generatedNumbers?.whiteBalls[idx] ?? null}
+              variant="white"
               delay={idx * 150}
               isLoading={isGenerating}
+              maxNumber={numberConfig.maxNumber}
             />
           ))}
           <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-muted-foreground/50 mx-0.5 sm:mx-1" />
-          <NumberBall 
-            number={generatedNumbers?.powerball ?? null} 
-            variant="power" 
-            delay={750}
+          <NumberBall
+            number={generatedNumbers?.powerball ?? null}
+            variant="power"
+            delay={numberConfig.count * 150}
             isLoading={isGenerating}
+            maxNumber={numberConfig.bonusMax}
           />
         </div>
 
@@ -399,7 +482,7 @@ export function LotteryGenerator() {
               Sum: <span className="text-foreground font-medium">{generatedNumbers.analysis.sum}</span>
             </span>
             <span>
-              E/O: <span className="text-foreground font-medium">{generatedNumbers.analysis.evenCount}/{5 - generatedNumbers.analysis.evenCount}</span>
+              E/O: <span className="text-foreground font-medium">{generatedNumbers.analysis.evenCount}/{generatedNumbers.whiteBalls.length - generatedNumbers.analysis.evenCount}</span>
             </span>
             <span>
               PB: <span className={`font-medium ${
