@@ -66,6 +66,8 @@ interface GeneratedNumbers {
     powerballStatus: string;
     sum: number;
     evenCount: number;
+    pattern?: string;
+    sumInRange?: boolean;
   };
 }
 
@@ -175,27 +177,133 @@ export function LotteryGenerator() {
     }, 1500);
   };
 
-  // --- Digit mode helpers (each position 0-9, repeats allowed) ---
-  const generateDigits = (count: number): number[] =>
-    Array.from({ length: count }, () => secureRandomInt(0, 9));
+  // --- Pick 4 pattern-based generation system ---
 
-  const generateDigitsWeighted = (count: number, weights: number[]): number[] => {
-    const totalWeight = weights.reduce((a, b) => a + b, 0);
-    return Array.from({ length: count }, () => {
-      const rand = secureRandom() * totalWeight;
-      let sum = 0;
-      for (let i = 0; i < weights.length; i++) {
-        sum += weights[i];
-        if (rand <= sum) return i;
-      }
-      return 9;
-    });
+  // Real combination type distribution (out of 10,000 total combos)
+  const PATTERN_WEIGHTS: [string, number][] = [
+    ["single", 50.4],      // all 4 different digits (e.g., 1-2-3-4)
+    ["double", 43.2],      // one pair + 2 singles (e.g., 1-2-3-3)
+    ["doublePair", 2.7],   // two pairs (e.g., 1-1-2-2)
+    ["triple", 3.6],       // three same + 1 different (e.g., 1-2-2-2)
+    ["quad", 0.1],         // all 4 same (e.g., 1-1-1-1)
+  ];
+
+  // Optimal digit sum range — covers ~70% of winning combos (bell curve peaks at 18)
+  const SUM_TARGET = { min: 13, max: 23 };
+
+  // Hot digits: appear more frequently in historical pick-4 data
+  const hotDigits = [1, 3, 7, 9];
+  // Cold digits: appear less frequently
+  const coldDigits = [0, 4, 5];
+  // Neutral digits
+  const neutralDigits = [2, 6, 8];
+
+  // Shuffle array in place (Fisher-Yates)
+  const shuffle = <T,>(arr: T[]): T[] => {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = secureRandomInt(0, i);
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
   };
 
-  // Hot digits: 1, 3, 7, 9 appear more often in historical pick-4 data
-  const hotDigits = [1, 3, 7, 9];
-  // Cold digits: 0, 4, 5 appear less often
-  const coldDigits = [0, 4, 5];
+  // Pick a random digit, optionally biased toward a pool
+  const pickDigit = (biasPool?: number[], biasChance = 0.5): number => {
+    if (biasPool && secureRandom() < biasChance) {
+      return biasPool[secureRandomInt(0, biasPool.length - 1)];
+    }
+    return secureRandomInt(0, 9);
+  };
+
+  // Pick a digit that's different from all in `exclude`
+  const pickDifferentDigit = (exclude: number[], biasPool?: number[], biasChance = 0.5): number => {
+    for (let attempt = 0; attempt < 50; attempt++) {
+      const d = pickDigit(biasPool, biasChance);
+      if (!exclude.includes(d)) return d;
+    }
+    // Fallback: pick any digit not in exclude
+    const available = Array.from({ length: 10 }, (_, i) => i).filter((d) => !exclude.includes(d));
+    return available.length > 0 ? available[secureRandomInt(0, available.length - 1)] : secureRandomInt(0, 9);
+  };
+
+  // Select a pattern type using real statistical weights
+  const pickPattern = (): string => {
+    const totalWeight = PATTERN_WEIGHTS.reduce((s, [, w]) => s + w, 0);
+    const rand = secureRandom() * totalWeight;
+    let cumulative = 0;
+    for (const [pattern, weight] of PATTERN_WEIGHTS) {
+      cumulative += weight;
+      if (rand <= cumulative) return pattern;
+    }
+    return "single";
+  };
+
+  // Generate 4 digits matching a specific pattern type
+  const generateByPattern = (pattern: string, biasPool?: number[], biasChance = 0.5): number[] => {
+    switch (pattern) {
+      case "single": {
+        // All 4 different
+        const d1 = pickDigit(biasPool, biasChance);
+        const d2 = pickDifferentDigit([d1], biasPool, biasChance);
+        const d3 = pickDifferentDigit([d1, d2], biasPool, biasChance);
+        const d4 = pickDifferentDigit([d1, d2, d3], biasPool, biasChance);
+        return shuffle([d1, d2, d3, d4]);
+      }
+      case "double": {
+        // One pair + 2 singles
+        const pair = pickDigit(biasPool, biasChance);
+        const s1 = pickDifferentDigit([pair], biasPool, biasChance);
+        const s2 = pickDifferentDigit([pair, s1], biasPool, biasChance);
+        return shuffle([pair, pair, s1, s2]);
+      }
+      case "doublePair": {
+        // Two different pairs
+        const p1 = pickDigit(biasPool, biasChance);
+        const p2 = pickDifferentDigit([p1], biasPool, biasChance);
+        return shuffle([p1, p1, p2, p2]);
+      }
+      case "triple": {
+        // Three same + 1 different
+        const tripleDigit = pickDigit(biasPool, biasChance);
+        const other = pickDifferentDigit([tripleDigit], biasPool, biasChance);
+        return shuffle([tripleDigit, tripleDigit, tripleDigit, other]);
+      }
+      case "quad": {
+        // All 4 same
+        const d = pickDigit(biasPool, biasChance);
+        return [d, d, d, d];
+      }
+      default:
+        return [pickDigit(), pickDigit(), pickDigit(), pickDigit()];
+    }
+  };
+
+  // Generate digits with optional sum-range targeting (retries up to maxAttempts)
+  const generateWithSumTarget = (
+    generator: () => number[],
+    targetSum = SUM_TARGET,
+    maxAttempts = 20
+  ): number[] => {
+    for (let i = 0; i < maxAttempts; i++) {
+      const digits = generator();
+      const sum = digits.reduce((a, b) => a + b, 0);
+      if (sum >= targetSum.min && sum <= targetSum.max) return digits;
+    }
+    return generator(); // fallback: accept any result
+  };
+
+  // Detect the pattern type of a 4-digit array
+  const detectPattern = (digits: number[]): string => {
+    const freq: Record<number, number> = {};
+    for (const d of digits) freq[d] = (freq[d] || 0) + 1;
+    const counts = Object.values(freq).sort((a, b) => b - a);
+    if (counts.length === 1) return "Quad";
+    if (counts[0] === 3) return "Triple";
+    if (counts.length === 2 && counts[0] === 2) return "Double Pair";
+    if (counts[0] === 2) return "Double";
+    return "Single";
+  };
 
   // --- Pool mode helpers (unique numbers, no repeats) ---
   const pickUnique = (count: number, min: number, max: number): number[] => {
@@ -239,59 +347,56 @@ export function LotteryGenerator() {
     };
   };
 
-  // --- Digit mode strategies (0-9 per position, repeats OK) ---
-  const generateDigitStrategy = (strategy: Strategy, config: NumberConfig): number[] => {
-    const { count } = config;
+  // --- Digit mode strategies (pattern-based, sum-targeted) ---
+  const generateDigitStrategy = (strategy: Strategy, _config: NumberConfig): number[] => {
     switch (strategy) {
       case "ultimate": {
-        // Mix: ~60% positions from hot digits, rest random
-        const hotPositions = Math.ceil(count * 0.6);
-        return Array.from({ length: count }, (_, i) =>
-          i < hotPositions
-            ? hotDigits[secureRandomInt(0, hotDigits.length - 1)]
-            : secureRandomInt(0, 9)
-        );
+        // Pattern-based + sum targeting + hot/neutral mix (lotterypowerpicks recommendation)
+        const mixPool = [...hotDigits, ...neutralDigits]; // hot + neutral, no cold
+        return generateWithSumTarget(() => {
+          const pattern = pickPattern();
+          return generateByPattern(pattern, mixPool, 0.6);
+        });
       }
       case "hot": {
-        // ~80% hot digits
-        const hotPositions = Math.ceil(count * 0.8);
-        return Array.from({ length: count }, (_, i) =>
-          i < hotPositions
-            ? hotDigits[secureRandomInt(0, hotDigits.length - 1)]
-            : secureRandomInt(0, 9)
-        );
+        // Pattern-based, biased heavily toward hot digits
+        return generateWithSumTarget(() => {
+          const pattern = pickPattern();
+          return generateByPattern(pattern, hotDigits, 0.8);
+        });
       }
       case "cold": {
-        // ~80% cold digits
-        const coldPositions = Math.ceil(count * 0.8);
-        return Array.from({ length: count }, (_, i) =>
-          i < coldPositions
-            ? coldDigits[secureRandomInt(0, coldDigits.length - 1)]
-            : secureRandomInt(0, 9)
-        );
+        // Pattern-based, biased toward cold digits
+        const pattern = pickPattern();
+        return generateByPattern(pattern, coldDigits, 0.8);
+        // No sum targeting — cold digits naturally produce lower sums
       }
       case "balanced": {
-        // 2 hot, 1 cold, 1 random
-        const hotCount = Math.max(1, Math.floor(count * 0.4));
-        const coldCount = Math.max(1, Math.floor(count * 0.4));
-        const result: number[] = [];
-        for (let i = 0; i < hotCount; i++) result.push(hotDigits[secureRandomInt(0, hotDigits.length - 1)]);
-        for (let i = 0; i < coldCount; i++) result.push(coldDigits[secureRandomInt(0, coldDigits.length - 1)]);
-        while (result.length < count) result.push(secureRandomInt(0, 9));
-        return result;
+        // Pattern-based + strict sum targeting + balanced digit distribution
+        const allDigits = [...hotDigits, ...coldDigits, ...neutralDigits];
+        return generateWithSumTarget(() => {
+          const pattern = pickPattern();
+          return generateByPattern(pattern, allDigits, 0.4);
+        });
       }
       case "frequency": {
-        // Weighted: hot digits 3x, neutral 2x, cold 1x
-        const weights = Array.from({ length: 10 }, (_, d) => {
-          if (hotDigits.includes(d)) return 3;
-          if (coldDigits.includes(d)) return 1;
-          return 2;
+        // Pattern-based + frequency-weighted digit selection
+        const weightedPool = [
+          ...hotDigits, ...hotDigits, ...hotDigits,     // 3x weight
+          ...neutralDigits, ...neutralDigits,            // 2x weight
+          ...coldDigits,                                 // 1x weight
+        ];
+        return generateWithSumTarget(() => {
+          const pattern = pickPattern();
+          return generateByPattern(pattern, weightedPool, 0.7);
         });
-        return generateDigitsWeighted(count, weights);
       }
       case "random":
-      default:
-        return generateDigits(count);
+      default: {
+        // Structurally realistic (real pattern distribution) but no bias or sum filter
+        const pattern = pickPattern();
+        return generateByPattern(pattern);
+      }
     }
   };
 
@@ -404,7 +509,12 @@ export function LotteryGenerator() {
       if ([24, 18, 6, 20, 21].includes(powerball)) powerballStatus = "hot";
       if ([8, 9, 12, 15, 25].includes(powerball)) powerballStatus = "cold";
     }
-    return { hotCount, coldCount, neutralCount, powerballStatus, sum, evenCount };
+
+    // Digit mode extras
+    const pattern = isDigitMode ? detectPattern(whiteBalls) : undefined;
+    const sumInRange = isDigitMode ? (sum >= SUM_TARGET.min && sum <= SUM_TARGET.max) : undefined;
+
+    return { hotCount, coldCount, neutralCount, powerballStatus, sum, evenCount, pattern, sumInRange };
   };
 
   const saveSet = () => {
@@ -557,11 +667,22 @@ export function LotteryGenerator() {
               <span className="text-blue-400 font-medium">{generatedNumbers.analysis.coldCount}</span> cold
             </span>
             <span>
-              Sum: <span className="text-foreground font-medium">{generatedNumbers.analysis.sum}</span>
+              Sum: <span className={`font-medium ${
+                generatedNumbers.analysis.sumInRange === true ? 'text-green-400' :
+                generatedNumbers.analysis.sumInRange === false ? 'text-yellow-400' : 'text-foreground'
+              }`}>{generatedNumbers.analysis.sum}</span>
+              {generatedNumbers.analysis.sumInRange === true && <span className="text-green-400 ml-0.5" title="In optimal range (13-23)">&#10003;</span>}
             </span>
-            <span>
-              E/O: <span className="text-foreground font-medium">{generatedNumbers.analysis.evenCount}/{generatedNumbers.whiteBalls.length - generatedNumbers.analysis.evenCount}</span>
-            </span>
+            {generatedNumbers.analysis.pattern && (
+              <span>
+                Pattern: <span className="text-foreground font-medium">{generatedNumbers.analysis.pattern}</span>
+              </span>
+            )}
+            {!generatedNumbers.analysis.pattern && (
+              <span>
+                E/O: <span className="text-foreground font-medium">{generatedNumbers.analysis.evenCount}/{generatedNumbers.whiteBalls.length - generatedNumbers.analysis.evenCount}</span>
+              </span>
+            )}
             {generatedNumbers.analysis.powerballStatus !== "none" && (
               <span>
                 PB: <span className={`font-medium ${
