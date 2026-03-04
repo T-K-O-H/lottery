@@ -7,9 +7,10 @@ interface NumberBallProps {
   variant?: "white" | "power";
   delay?: number;
   isLoading?: boolean;
+  maxNumber?: number;
 }
 
-export function NumberBall({ number, variant = "white", delay = 0, isLoading = false }: NumberBallProps) {
+export function NumberBall({ number, variant = "white", delay = 0, isLoading = false, maxNumber }: NumberBallProps) {
   const [displayNumber, setDisplayNumber] = useState<number | null>(null);
   const [isRevealing, setIsRevealing] = useState(false);
 
@@ -40,7 +41,7 @@ export function NumberBall({ number, variant = "white", delay = 0, isLoading = f
           setDisplayNumber(number);
           clearInterval(rollInterval);
         } else {
-          const max = variant === "power" ? 26 : 69;
+          const max = maxNumber ?? (variant === "power" ? 26 : 69);
           setDisplayNumber(Math.floor(Math.random() * max) + 1);
           counter++;
         }
@@ -50,7 +51,7 @@ export function NumberBall({ number, variant = "white", delay = 0, isLoading = f
     }, delay);
 
     return () => clearTimeout(revealTimer);
-  }, [number, delay, variant, isLoading]);
+  }, [number, delay, variant, isLoading, maxNumber]);
 
   const isPower = variant === "power";
   const showNumber = displayNumber !== null;
