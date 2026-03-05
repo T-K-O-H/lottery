@@ -49,9 +49,12 @@ const NUMBER_CONFIGS: NumberConfig[] = [
   { mode: "digits", count: 3, maxNumber: 9, bonusMax: 0, allowRepeats: true, label: "3 Pick" },
   { mode: "digits", count: 4, maxNumber: 9, bonusMax: 0, allowRepeats: true, label: "4 Pick" },
   { mode: "pool", count: 5, maxNumber: 69, bonusMax: 26, allowRepeats: false, label: "5 PB" },
+  { mode: "pool", count: 5, maxNumber: 70, bonusMax: 25, allowRepeats: false, label: "5 MM" },
 ];
 
 const DEFAULT_CONFIG = NUMBER_CONFIGS[2]; // 5 PB (current behavior)
+
+const SET_COUNT_OPTIONS = [1, 3, 5, 10];
 
 type Strategy = "ultimate" | "hot" | "cold" | "balanced" | "frequency" | "random";
 
@@ -90,6 +93,8 @@ export function LotteryGenerator() {
   const [isHydrated, setIsHydrated] = useState(false);
   const [globalCount, setGlobalCount] = useState<number | null>(null);
   const [numberConfig, setNumberConfig] = useState<NumberConfig>(DEFAULT_CONFIG);
+  const [setCount, setSetCount] = useState(1);
+  const [generatedSets, setGeneratedSets] = useState<GeneratedNumbers[]>([]);
 
   // Load from localStorage on mount and fetch global counter
   useEffect(() => {
@@ -156,14 +161,19 @@ export function LotteryGenerator() {
   const generateNumbers = (strategy: Strategy) => {
     setIsGenerating(true);
     setGeneratedNumbers(null);
+    setGeneratedSets([]);
     setShowFireworks(false);
 
     setTimeout(async () => {
-      const numbers = generateNumbersForStrategy(strategy);
-      setGeneratedNumbers(numbers);
+      const sets: GeneratedNumbers[] = [];
+      for (let i = 0; i < setCount; i++) {
+        sets.push(generateNumbersForStrategy(strategy));
+      }
+      setGeneratedNumbers(sets[0]);
+      setGeneratedSets(sets.length > 1 ? sets.slice(1) : []);
       setIsGenerating(false);
       setShowFireworks(true);
-      
+
       // Increment global counter
       try {
         const res = await fetch("/api/counter", { method: "POST" });
@@ -540,7 +550,8 @@ export function LotteryGenerator() {
 
   const saveSet = () => {
     if (generatedNumbers) {
-      setSavedSets([...savedSets, generatedNumbers]);
+      const allSets = [generatedNumbers, ...generatedSets];
+      setSavedSets([...savedSets, ...allSets]);
     }
   };
 
@@ -577,6 +588,7 @@ export function LotteryGenerator() {
               onClick={() => {
                 setNumberConfig(config);
                 setGeneratedNumbers(null);
+                setGeneratedSets([]);
               }}
               className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
                 numberConfig.label === config.label
@@ -612,8 +624,26 @@ export function LotteryGenerator() {
         })}
       </div>
 
-      {/* Generate Button - Clean with strategy icon */}
+      {/* Set Count + Generate Button */}
       <div className="text-center py-3 sm:py-4">
+        <div className="flex justify-center items-center gap-2 mb-3">
+          <span className="text-sm text-muted-foreground">Sets:</span>
+          <div className="inline-flex items-center bg-card/60 border border-border/50 rounded-full p-0.5 gap-0.5">
+            {SET_COUNT_OPTIONS.map((count) => (
+              <button
+                key={count}
+                onClick={() => setSetCount(count)}
+                className={`w-8 h-7 rounded-full text-xs font-medium transition-all ${
+                  setCount === count
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {count}
+              </button>
+            ))}
+          </div>
+        </div>
         <Button
           onClick={() => generateNumbers(selectedStrategy)}
           disabled={isGenerating}
@@ -719,12 +749,38 @@ export function LotteryGenerator() {
           <div className="flex justify-center gap-1.5 sm:gap-2">
             <Button onClick={saveSet} variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground text-base h-8 sm:h-9 px-3">
               <Save className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-1.5" />
-              Save
+              {generatedSets.length > 0 ? `Save All (${1 + generatedSets.length})` : "Save"}
             </Button>
             <Button onClick={() => generateNumbers(selectedStrategy)} variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground text-base h-8 sm:h-9 px-3">
               <RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-1.5" />
               Again
             </Button>
+          </div>
+        )}
+
+        {/* Extra sets from multi-set generation */}
+        {generatedSets.length > 0 && (
+          <div className="space-y-1.5 mt-3 pt-3 border-t border-border/20">
+            {generatedSets.map((set, idx) => (
+              <div key={idx} className="flex items-center justify-center gap-1.5 sm:gap-2 py-1">
+                <span className="text-xs text-muted-foreground w-6 text-right">#{idx + 2}</span>
+                <div className="flex items-center gap-1 sm:gap-1.5">
+                  {set.whiteBalls.map((num, i) => (
+                    <div key={i} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-white/90 to-white/70 flex items-center justify-center text-black text-xs sm:text-sm font-bold shadow">
+                      {num}
+                    </div>
+                  ))}
+                  {set.powerball !== null && (
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-red-600 to-red-800 flex items-center justify-center text-white text-xs sm:text-sm font-bold shadow">
+                      {set.powerball}
+                    </div>
+                  )}
+                </div>
+                {set.analysis.pattern && (
+                  <span className="text-xs text-muted-foreground">{set.analysis.pattern}</span>
+                )}
+              </div>
+            ))}
           </div>
         )}
       </div>
