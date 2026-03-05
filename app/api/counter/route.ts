@@ -14,12 +14,21 @@ export async function GET() {
   }
 }
 
-export async function POST() {
+export async function POST(request: Request) {
   try {
+    let increment = 1;
+    try {
+      const body = await request.json();
+      if (typeof body.increment === 'number' && body.increment >= 1 && body.increment <= 10) {
+        increment = Math.floor(body.increment);
+      }
+    } catch {
+      // No body or invalid JSON — default to 1
+    }
     const result = await sql`
-      UPDATE generation_counter 
-      SET total_generations = total_generations + 1, updated_at = NOW()
-      WHERE id = 1 
+      UPDATE generation_counter
+      SET total_generations = total_generations + ${increment}, updated_at = NOW()
+      WHERE id = 1
       RETURNING total_generations
     `;
     const count = result[0]?.total_generations ?? 0;
