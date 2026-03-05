@@ -579,26 +579,47 @@ export function LotteryGenerator() {
         </div>
       )}
       
-      {/* Number Count Selector */}
-      <div className="flex justify-center">
-        <div className="inline-flex items-center bg-card/60 border border-border/50 rounded-full p-1 gap-0.5">
-          {NUMBER_CONFIGS.map((config) => (
-            <button
-              key={config.label}
-              onClick={() => {
-                setNumberConfig(config);
-                setGeneratedNumbers(null);
-                setGeneratedSets([]);
-              }}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
-                numberConfig.label === config.label
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {config.label}
-            </button>
-          ))}
+      {/* Game Mode + Set Count — combined row */}
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4">
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground uppercase tracking-wider">Game</span>
+          <div className="inline-flex items-center bg-card/60 border border-border/50 rounded-full p-1 gap-0.5">
+            {NUMBER_CONFIGS.map((config) => (
+              <button
+                key={config.label}
+                onClick={() => {
+                  setNumberConfig(config);
+                  setGeneratedNumbers(null);
+                  setGeneratedSets([]);
+                }}
+                className={`px-3 py-1 rounded-full text-sm font-medium transition-all ${
+                  numberConfig.label === config.label
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {config.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground uppercase tracking-wider">Sets</span>
+          <div className="inline-flex items-center bg-card/60 border border-border/50 rounded-full p-1 gap-0.5">
+            {SET_COUNT_OPTIONS.map((count) => (
+              <button
+                key={count}
+                onClick={() => setSetCount(count)}
+                className={`w-8 h-7 rounded-full text-xs font-medium transition-all ${
+                  setCount === count
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {count}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -624,26 +645,8 @@ export function LotteryGenerator() {
         })}
       </div>
 
-      {/* Set Count + Generate Button */}
+      {/* Generate Button */}
       <div className="text-center py-3 sm:py-4">
-        <div className="flex justify-center items-center gap-2 mb-3">
-          <span className="text-sm text-muted-foreground">Sets:</span>
-          <div className="inline-flex items-center bg-card/60 border border-border/50 rounded-full p-0.5 gap-0.5">
-            {SET_COUNT_OPTIONS.map((count) => (
-              <button
-                key={count}
-                onClick={() => setSetCount(count)}
-                className={`w-8 h-7 rounded-full text-xs font-medium transition-all ${
-                  setCount === count
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {count}
-              </button>
-            ))}
-          </div>
-        </div>
         <Button
           onClick={() => generateNumbers(selectedStrategy)}
           disabled={isGenerating}
