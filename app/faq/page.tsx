@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { ChevronLeft } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -80,16 +81,26 @@ export default function FAQPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
-      
+
       <div className="container mx-auto px-4 py-8 md:py-12 max-w-3xl">
-        <Link 
-          href="/" 
+        <Link
+          href="/"
           className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
         >
           <ChevronLeft className="w-4 h-4 mr-1" />
           Back to Generator
         </Link>
-        
+
+        <div className="flex justify-center mb-6">
+          <Image
+            src="/brand-mark.webp"
+            alt="PB Lucky Draw AI"
+            width={280}
+            height={280}
+            className="w-80 h-80 sm:w-96 sm:h-96 md:w-[28rem] md:h-[28rem] object-contain"
+          />
+        </div>
+
         <h1 className="text-3xl md:text-4xl font-bold mb-2 text-foreground">
           Frequently Asked Questions
         </h1>
