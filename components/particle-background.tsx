@@ -18,7 +18,7 @@ export function ParticleBackground() {
     canvas.height = canvasHeight;
 
     const particles: Particle[] = [];
-    const particleCount = 50;
+    const particleCount = 30;
 
     class Particle {
       x: number;
@@ -31,7 +31,7 @@ export function ParticleBackground() {
       constructor() {
         this.x = Math.random() * canvasWidth;
         this.y = Math.random() * canvasHeight;
-        this.size = Math.random() * 3 + 1;
+        this.size = Math.random() * 2 + 0.5;
         this.speedX = Math.random() * 0.5 - 0.25;
         this.speedY = Math.random() * 0.5 - 0.25;
         
@@ -84,8 +84,8 @@ export function ParticleBackground() {
           const dy = a.y - b.y;
           const distance = Math.sqrt(dx * dx + dy * dy);
 
-          if (distance < 150) {
-            ctx.strokeStyle = `rgba(167, 139, 250, ${0.1 * (1 - distance / 150)})`;
+          if (distance < 100) {
+            ctx.strokeStyle = `rgba(167, 139, 250, ${0.1 * (1 - distance / 100)})`;
             ctx.lineWidth = 1;
             ctx.beginPath();
             ctx.moveTo(a.x, a.y);
@@ -117,7 +117,7 @@ export function ParticleBackground() {
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 pointer-events-none opacity-30"
+      className="fixed inset-0 pointer-events-none opacity-20"
     />
   );
 }

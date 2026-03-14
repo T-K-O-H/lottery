@@ -41,11 +41,11 @@ export function GenerationEffects({ trigger, type }: GenerationEffectsProps) {
     switch (type) {
       case "fireworks":
         // Multiple burst points
-        for (let burst = 0; burst < 4; burst++) {
+        for (let burst = 0; burst < 3; burst++) {
           const centerX = 15 + Math.random() * 70;
           const centerY = 15 + Math.random() * 40;
-          for (let i = 0; i < 20; i++) {
-            const angle = (i / 20) * Math.PI * 2;
+          for (let i = 0; i < 15; i++) {
+            const angle = (i / 15) * Math.PI * 2;
             const speed = 2 + Math.random() * 3;
             newParticles.push({
               id: burst * 100 + i,
@@ -97,19 +97,25 @@ export function GenerationEffects({ trigger, type }: GenerationEffectsProps) {
         break;
 
       case "dollars":
-        // Floating dollar signs
-        for (let i = 0; i < 20; i++) {
-          newParticles.push({
-            id: i,
-            x: Math.random() * 100,
-            y: 110 + Math.random() * 20,
-            size: 16 + Math.random() * 12,
-            opacity: 0.8 + Math.random() * 0.2,
-            rotation: Math.random() * 20 - 10,
-            speedX: Math.random() * 1 - 0.5,
-            speedY: -(2 + Math.random() * 2),
-            color: dollarColor,
-          });
+        // Green circle burst particles
+        for (let burst = 0; burst < 3; burst++) {
+          const centerX = 15 + Math.random() * 70;
+          const centerY = 15 + Math.random() * 40;
+          for (let i = 0; i < 15; i++) {
+            const angle = (i / 15) * Math.PI * 2;
+            const speed = 2 + Math.random() * 3;
+            newParticles.push({
+              id: burst * 100 + i,
+              x: centerX,
+              y: centerY,
+              size: 4 + Math.random() * 4,
+              opacity: 1,
+              rotation: 0,
+              speedX: Math.cos(angle) * speed,
+              speedY: Math.sin(angle) * speed,
+              color: dollarColor,
+            });
+          }
         }
         break;
 
@@ -141,14 +147,12 @@ export function GenerationEffects({ trigger, type }: GenerationEffectsProps) {
     return () => clearTimeout(timeout);
   }, [trigger, type]);
 
-  if (particles.length === 0) return null;
-
   return (
-    <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
+    <div className={`fixed inset-0 pointer-events-none z-50 overflow-hidden ${particles.length === 0 ? 'hidden' : ''}`}>
       {particles.map((particle) => (
         <div
           key={particle.id}
-          className={`absolute ${type === "fireworks" || type === "lightning" || type === "shooting-star" ? "animate-effect-burst" : "animate-effect-fall"}`}
+          className={`absolute ${type === "fireworks" || type === "lightning" || type === "shooting-star" || type === "dollars" ? "animate-effect-burst" : "animate-effect-fall"}`}
           style={{
             left: `${particle.x}%`,
             top: `${particle.y}%`,
@@ -207,18 +211,16 @@ export function GenerationEffects({ trigger, type }: GenerationEffectsProps) {
           )}
           
           {type === "dollars" && (
-            <span
+            <div
+              className="rounded-full"
               style={{
-                fontSize: particle.size,
-                color: particle.color,
+                width: particle.size,
+                height: particle.size,
+                backgroundColor: particle.color,
+                boxShadow: `0 0 ${particle.size * 2}px ${particle.color}`,
                 opacity: particle.opacity,
-                transform: `rotate(${particle.rotation}deg)`,
-                filter: `drop-shadow(0 0 6px ${particle.color})`,
-                fontWeight: "bold",
               }}
-            >
-              $
-            </span>
+            />
           )}
           
           {type === "shooting-star" && (

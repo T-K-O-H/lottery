@@ -3,8 +3,8 @@ import Link from "next/link";
 import { ChevronLeft, Sparkles, Flame, Snowflake, Scale, TrendingUp, Shuffle } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "How It Works - PB Lucky Draw AI | Powerball Strategy Guide",
-  description: "Learn how PB Lucky Draw AI generates Powerball numbers using 6 unique strategies. Understand hot numbers, cold numbers, frequency analysis, and our AI-powered algorithms.",
+  title: "How It Works - PB Lucky Draw AI | Lottery Number Strategy Guide",
+  description: "Learn how PB Lucky Draw AI generates lottery numbers for Powerball, Mega Millions, Pick 3 & Pick 4 using 6 unique strategies. Hot numbers, cold numbers, frequency analysis, and more.",
   keywords: [
     "powerball strategy guide",
     "lottery number strategies",
@@ -237,14 +237,22 @@ export default function HowItWorksPage() {
           </p>
         </div>
 
-        <div className="mt-12 text-center">
+        <div className="mt-12 text-center space-y-4">
           <p className="text-muted-foreground mb-4">Ready to generate your numbers?</p>
-          <Link 
-            href="/"
-            className="inline-flex items-center justify-center px-6 py-3 bg-primary text-primary-foreground font-medium rounded-full hover:opacity-90 transition-opacity"
-          >
-            Try the Generator
-          </Link>
+          <div className="flex flex-wrap justify-center gap-4">
+            <Link
+              href="/"
+              className="inline-flex items-center justify-center px-6 py-3 bg-primary text-primary-foreground font-medium rounded-full hover:opacity-90 transition-opacity"
+            >
+              Try the Generator
+            </Link>
+            <Link
+              href="/faq"
+              className="inline-flex items-center justify-center px-6 py-3 border border-border text-muted-foreground font-medium rounded-full hover:text-foreground hover:border-foreground/30 transition-colors"
+            >
+              Read the FAQ
+            </Link>
+          </div>
         </div>
       </div>
     </main>

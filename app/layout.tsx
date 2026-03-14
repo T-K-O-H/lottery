@@ -15,18 +15,19 @@ const spaceMono = Space_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PB Lucky Draw AI - Free Powerball Number Generator | AI-Powered Lottery Picks",
-  description: "Generate smart Powerball lottery numbers with our free AI-powered number generator. Uses historical pattern analysis, hot/cold number tracking, and multiple strategies. Pick your lucky numbers today!",
+  metadataBase: new URL("https://pblucky.com"),
+  title: "PB Lucky Draw AI - Free Lottery Number Generator | Powerball & Mega Millions",
+  description: "Free AI-powered lottery number generator for Powerball, Mega Millions, Pick 3, and Pick 4. Uses pattern analysis, hot/cold tracking, and 6 smart strategies to pick your lucky numbers.",
   keywords: [
     "powerball number generator",
+    "mega millions number generator",
     "lottery number generator",
+    "pick 3 number generator",
+    "pick 4 number generator",
+    "AI lottery generator",
     "powerball picks",
     "lucky lottery numbers",
-    "AI lottery generator",
-    "powerball strategy",
-    "random number generator lottery",
     "hot and cold lottery numbers",
-    "powerball winning numbers",
     "lottery number picker",
     "free lottery generator",
     "powerball quick pick alternative"
@@ -49,21 +50,21 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     siteName: "PB Lucky Draw AI",
-    title: "PB Lucky Draw AI - Free Powerball Number Generator",
-    description: "Generate smart Powerball lottery numbers with our free AI-powered generator. Multiple strategies including hot numbers, cold numbers, and balanced picks.",
+    title: "PB Lucky Draw AI - Free Lottery Number Generator",
+    description: "Free AI-powered number generator for Powerball, Mega Millions, Pick 3 & Pick 4. 6 smart strategies including hot numbers, cold numbers, and balanced picks.",
     images: [
       {
         url: "/og-image.jpg",
         width: 1200,
         height: 630,
-        alt: "PB Lucky Draw AI - Powerball Number Generator",
+        alt: "PB Lucky Draw AI - Lottery Number Generator",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "PB Lucky Draw AI - Free Powerball Number Generator",
-    description: "Generate smart Powerball lottery numbers with our free AI-powered generator. Try your luck today!",
+    title: "PB Lucky Draw AI - Free Lottery Number Generator",
+    description: "Free AI-powered number generator for Powerball, Mega Millions, Pick 3 & Pick 4. Try your luck today!",
     images: ["/og-image.jpg"],
   },
   icons: {
@@ -87,7 +88,7 @@ const jsonLd = {
   "@context": "https://schema.org",
   "@type": "WebApplication",
   "name": "PB Lucky Draw AI",
-  "description": "Generate smart Powerball lottery numbers with AI-powered pattern analysis",
+  "description": "Free AI-powered lottery number generator for Powerball, Mega Millions, Pick 3, and Pick 4",
   "url": "https://pblucky.com",
   "applicationCategory": "Entertainment",
   "operatingSystem": "Any",
@@ -95,11 +96,6 @@ const jsonLd = {
     "@type": "Offer",
     "price": "0",
     "priceCurrency": "USD"
-  },
-  "aggregateRating": {
-    "@type": "AggregateRating",
-    "ratingValue": "4.8",
-    "ratingCount": "150"
   }
 };
 

@@ -3,8 +3,8 @@ import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "FAQ - PB Lucky Draw AI | Powerball Number Generator Questions",
-  description: "Frequently asked questions about PB Lucky Draw AI's Powerball number generator. Learn about our AI strategies, hot/cold numbers, and how to use our free lottery picker.",
+  title: "FAQ - PB Lucky Draw AI | Lottery Number Generator Questions",
+  description: "Frequently asked questions about PB Lucky Draw AI. Learn about our AI strategies for Powerball, Mega Millions, Pick 3 & Pick 4, hot/cold numbers, and how to use our free lottery picker.",
   keywords: [
     "powerball faq",
     "lottery number generator help",
@@ -97,15 +97,16 @@ export default function FAQPage() {
           Everything you need to know about PB Lucky Draw AI
         </p>
 
+        <h2 className="text-xl font-semibold mb-4 text-foreground">Common Questions</h2>
         <div className="space-y-6">
           {faqs.map((faq, index) => (
             <div 
               key={index} 
               className="border border-border rounded-lg p-5 bg-card/50"
             >
-              <h2 className="text-lg font-semibold mb-2 text-foreground">
+              <h3 className="text-lg font-semibold mb-2 text-foreground">
                 {faq.question}
-              </h2>
+              </h3>
               <p className="text-muted-foreground leading-relaxed">
                 {faq.answer}
               </p>
@@ -113,14 +114,22 @@ export default function FAQPage() {
           ))}
         </div>
 
-        <div className="mt-12 text-center">
+        <div className="mt-12 text-center space-y-4">
           <p className="text-muted-foreground mb-4">Ready to try your luck?</p>
-          <Link 
-            href="/"
-            className="inline-flex items-center justify-center px-6 py-3 bg-primary text-primary-foreground font-medium rounded-full hover:opacity-90 transition-opacity"
-          >
-            Generate Numbers Now
-          </Link>
+          <div className="flex flex-wrap justify-center gap-4">
+            <Link
+              href="/"
+              className="inline-flex items-center justify-center px-6 py-3 bg-primary text-primary-foreground font-medium rounded-full hover:opacity-90 transition-opacity"
+            >
+              Generate Numbers Now
+            </Link>
+            <Link
+              href="/how-it-works"
+              className="inline-flex items-center justify-center px-6 py-3 border border-border text-muted-foreground font-medium rounded-full hover:text-foreground hover:border-foreground/30 transition-colors"
+            >
+              How It Works
+            </Link>
+          </div>
         </div>
       </div>
     </main>
